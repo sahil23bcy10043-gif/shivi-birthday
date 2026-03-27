@@ -1,0 +1,3397 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Caveat:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Sacramento&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #FFFAF5;
+            --surface: #D0E8FF;
+            --card: #BBE1FF;
+            --rose: #3B82F6;
+            --rose-light: #5B9FFF;
+            --rose-dim: #2563EB;
+            --text: #0F172A;
+            --text-dim: #475B99;
+            --accent: #3B82F6;
+            --blush: #A8D5FF;
+            --star: #D0E8FF;
+        }
+        html {
+            scroll-behavior: smooth;
+            height: 100%;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #FEFDFB;
+            color: var(--text);
+            height: 100%;
+            overflow: hidden;
+            cursor: none;
+        }
+        #root { 
+            height: 100%; 
+            background: #FEFDFB;
+        }
+        /* ===== CUSTOM CURSOR ===== */
+        .cursor-dot {
+            position: fixed;
+            width: 8px; height: 8px;
+            background: var(--rose);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99999;
+            transition: transform 0.1s ease;
+            mix-blend-mode: difference;
+        }
+        .cursor-ring {
+            position: fixed;
+            width: 35px; height: 35px;
+            border: 1.5px solid var(--rose);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99998;
+            transition: transform 0.15s ease, width 0.3s ease, height 0.3s ease, border-color 0.3s ease;
+            transform: translate(-50%, -50%);
+            opacity: 0.5;
+        }
+        .cursor-ring.hovering {
+            width: 55px; height: 55px;
+            border-color: var(--accent);
+            opacity: 0.8;
+        }
+        /* ===== ANIMATED BACKGROUND ===== */
+        .animated-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        /* Floating gradient orbs */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+            animation: orbFloat var(--dur, 20s) ease-in-out infinite alternate;
+        }
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(var(--mx, 50px), var(--my, -30px)) scale(1.1); }
+            66% { transform: translate(calc(var(--mx, 50px) * -0.5), calc(var(--my, -30px) * -1.5)) scale(0.9); }
+            100% { transform: translate(calc(var(--mx, 50px) * 0.8), calc(var(--my, -30px) * 0.6)) scale(1.05); }
+        }
+        /* Floating shapes — hearts, circles, stars */
+        .bg-shape {
+            position: absolute;
+            opacity: 0;
+            animation: shapeFloat var(--dur, 15s) linear infinite;
+            animation-delay: var(--delay, 0s);
+            pointer-events: none;
+        }
+        @keyframes shapeFloat {
+            0% { transform: translateY(100vh) rotate(0deg) scale(var(--s, 1)); opacity: 0; }
+            5% { opacity: var(--o, 0.3); }
+            85% { opacity: var(--o, 0.3); }
+            100% { transform: translateY(-100px) rotate(var(--rot, 360deg)) scale(var(--s, 1)); opacity: 0; }
+        }
+        /* Shimmer wave overlay */
+        .bg-shimmer {
+            position: absolute;
+            top: 0; left: -100%;
+            width: 300%; height: 100%;
+            background: linear-gradient(
+                105deg,
+                transparent 30%,
+                rgba(255,255,255,0.03) 38%,
+                rgba(255,255,255,0.08) 40%,
+                rgba(255,255,255,0.03) 42%,
+                transparent 50%
+            );
+            animation: shimmerWave 8s ease-in-out infinite;
+        }
+        @keyframes shimmerWave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(50%); }
+        }
+        /* Sparkle dots */
+        .bg-sparkle {
+            position: absolute;
+            width: var(--size, 4px);
+            height: var(--size, 4px);
+            border-radius: 50%;
+            background: var(--color, #A8D5FF);
+            animation: sparkle var(--dur, 3s) ease-in-out infinite;
+            animation-delay: var(--delay, 0s);
+        }
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 0.8; transform: scale(1); }
+        }
+        /* Floating bubbles */
+        .bg-bubble {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid rgba(59, 130, 246, 0.15);
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), transparent);
+            animation: bubbleRise var(--dur, 12s) ease-in infinite;
+            animation-delay: var(--delay, 0s);
+            opacity: 0;
+        }
+        @keyframes bubbleRise {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.4; }
+            100% { transform: translateY(calc(-100vh - 50px)) scale(0.8); opacity: 0; }
+        }
+
+        /* ===== STARFIELD (sparkle layer) ===== */
+        .starfield {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--rose);
+        }
+        .star-twinkle { animation: twinkle var(--dur) ease-in-out infinite; }
+        @keyframes twinkle {
+            0%, 100% { opacity: var(--min-o, 0.2); transform: scale(1); }
+            50% { opacity: var(--max-o, 0.8); transform: scale(1.5); }
+        }
+        .shooting-star {
+            position: absolute;
+            width: 2px; height: 2px;
+            background: var(--rose);
+            border-radius: 50%;
+            animation: shoot 2s linear infinite;
+            opacity: 0;
+        }
+        .shooting-star::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 50px; height: 1px;
+            background: linear-gradient(to left, rgba(59, 130, 246, 0.4), transparent);
+            transform-origin: left;
+            transform: rotate(var(--angle, -45deg));
+        }
+        @keyframes shoot {
+            0% { transform: translate(0, 0); opacity: 0; }
+            5% { opacity: 1; }
+            40% { opacity: 1; }
+            60% { opacity: 0; }
+            100% { transform: translate(var(--dx, -300px), var(--dy, 300px)); opacity: 0; }
+        }
+        /* ===== CURSOR TRAIL ===== */
+        .trail-particle {
+            position: fixed;
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99990;
+            animation: trailFade 0.6s ease-out forwards;
+        }
+        @keyframes trailFade {
+            0% { opacity: 0.7; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0); }
+        }
+        /* ===== NAV ===== */
+        .nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            background: transparent;
+            backdrop-filter: none;
+            border-bottom: none;
+        }
+        .nav-btn {
+            font-family: 'Caveat', cursive;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            padding: 8px 18px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(255,255,255,0.5);
+            color: var(--text-dim);
+            border-radius: 30px;
+            cursor: none;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+        }
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            background: var(--rose);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s ease, height 0.5s ease;
+            opacity: 0.1;
+        }
+        .nav-btn:hover::before { width: 200px; height: 200px; }
+        .nav-btn:hover { color: var(--rose); border-color: rgba(59, 130, 246, 0.4); }
+        .nav-btn.active {
+            background: var(--rose);
+            color: #fff;
+            border-color: var(--rose);
+            font-weight: 500;
+            box-shadow: 0 2px 12px rgba(59, 130, 246, 0.35);
+        }
+        /* ===== PAGE TRANSITIONS ===== */
+        .page {
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            z-index: 1;
+            -webkit-overflow-scrolling: touch;
+        }
+        .page-transition-enter {
+            animation: pageFadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes pageFadeUp {
+            from { opacity: 0; transform: translateY(60px) scale(0.98); filter: blur(8px); }
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        /* ===== HERO ===== */
+        .hero {
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            padding: 92px 22px 16px;
+            position: relative;
+            gap: 0;
+        }
+        .hero-main {
+            width: min(100%, 760px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: clamp(10px, 2.5vh, 34px);
+            position: relative;
+            z-index: 3;
+        }
+        .hero-glow {
+            position: absolute;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation: glowPulse 4s ease-in-out infinite;
+        }
+        @keyframes glowPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        }
+        .hero-overline {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.65rem;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: var(--rose-dim);
+            margin-bottom: 10px;
+            animation: fadeSlideDown 1s ease 0.3s both;
+        }
+        @keyframes fadeSlideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hero-title {
+            font-family: 'Sacramento', cursive;
+            font-size: clamp(2.8rem, 8vw, 5.5rem);
+            color: var(--rose);
+            line-height: 1.05;
+            margin-bottom: 34px;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-title .char {
+            display: inline-block;
+            animation: charReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+            opacity: 0;
+        }
+        @keyframes charReveal {
+            from { opacity: 0; transform: translateY(40px) rotate(8deg); filter: blur(4px); }
+            to { opacity: 1; transform: translateY(0) rotate(0); filter: blur(0); }
+        }
+        .hero-message {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: clamp(0.98rem, 1.5vw, 1.12rem);
+            color: var(--text-dim);
+            max-width: 560px;
+            line-height: 1.85;
+            margin-bottom: 28px;
+            animation: fadeIn 1s ease 1.5s both;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .hero-cta {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.9rem;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
+            color: var(--rose-dim);
+            cursor: none;
+            padding: 12px 26px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 30px;
+            background: transparent;
+            transition: all 0.4s ease;
+            animation: fadeIn 1s ease 2s both;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .hero-cta::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--rose);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+        .hero-cta:hover { color: #fff; border-color: var(--rose); }
+        .hero-cta:hover::after { opacity: 1; }
+        .hero-line {
+            display: none;
+        }
+
+        /* ===== FLOATING BALLOONS ===== */
+        .balloons-container {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .balloon {
+            position: absolute;
+            bottom: -120px;
+            width: var(--size, 45px);
+            height: calc(var(--size, 45px) * 1.2);
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            opacity: 0.7;
+            animation: balloonRise var(--dur, 12s) linear infinite;
+            animation-delay: var(--delay, 0s);
+            pointer-events: auto;
+            z-index: 1;
+        }
+        .balloon::before {
+            content: '';
+            position: absolute;
+            top: 12%; left: 22%;
+            width: 30%; height: 20%;
+            background: rgba(255,255,255,0.35);
+            border-radius: 50%;
+            transform: rotate(-30deg);
+        }
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            width: 1px;
+            height: 30px;
+            background: rgba(255,255,255,0.25);
+            transform: translateX(-50%);
+        }
+        @keyframes balloonRise {
+            0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+            5% { opacity: 0.7; }
+            50% { transform: translateY(calc(-50vh - 60px)) translateX(var(--sway, 20px)) rotate(5deg); }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(calc(-110vh - 120px)) translateX(calc(var(--sway, 20px) * -1)) rotate(-3deg); opacity: 0; }
+        }
+        .balloon.popping {
+            animation: balloonPop 0.35s ease-out forwards;
+        }
+        .balloon.popping::after {
+            opacity: 0;
+        }
+        @keyframes balloonPop {
+            0% { opacity: 0.8; transform: scale(1); filter: blur(0); }
+            100% { opacity: 0; transform: scale(1.45); filter: blur(2px); }
+        }
+        .balloon-pop {
+            position: fixed;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--pop-color, #fff);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 40;
+            animation: balloonPopBurst 0.45s ease-out forwards;
+        }
+        .balloon-pop::before,
+        .balloon-pop::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 18px;
+            height: 2px;
+            background: var(--pop-color, #fff);
+            transform: translate(-50%, -50%) rotate(var(--r, 0deg));
+            opacity: 0.85;
+        }
+        .balloon-pop::after {
+            --r: 90deg;
+        }
+        @keyframes balloonPopBurst {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.65); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
+        }
+        .balloon-pop-confetti {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--size, 8px);
+            height: var(--size, 8px);
+            border-radius: var(--br, 2px);
+            background: var(--color, #fff);
+            pointer-events: none;
+            z-index: 41;
+            transform: translate(-50%, -50%);
+            animation: balloonConfettiBurst var(--dur, 0.9s) cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+        }
+        @keyframes balloonConfettiBurst {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(0.9);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) translate(var(--dx, 0), var(--dy, 0)) rotate(var(--rot, 360deg)) scale(0.4);
+            }
+        }
+
+        /* ===== SVG BIRTHDAY CAKE ===== */
+        .cake-container {
+            position: relative;
+            width: 135px;
+            height: 150px;
+            margin: 0 auto 4px;
+            animation: cakeEntrance 1s ease 0.8s both;
+            z-index: 2;
+            filter: drop-shadow(0 6px 18px rgba(0,0,0,0.15));
+        }
+        @keyframes cakeEntrance {
+            0% { opacity: 0; transform: scale(0.6) translateY(30px); }
+            60% { transform: scale(1.05) translateY(-5px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .cake-container svg { width: 100%; height: 100%; }
+        .cake-glow {
+            position: absolute;
+            top: -15px; left: 50%; transform: translateX(-50%);
+            width: 60px; height: 30px;
+            background: radial-gradient(ellipse, rgba(255,200,80,0.35), transparent 70%);
+            filter: blur(8px);
+            animation: glowPulse 1.5s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        @keyframes glowPulse {
+            0% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1.2); }
+        }
+
+        /* ===== FRIEND NAMES TICKER ===== */
+        .ticker-container {
+            width: 100%;
+            overflow: hidden;
+            padding: 6px 0 0;
+            margin-top: auto;
+            position: relative;
+            z-index: 2;
+            animation: fadeIn 1s ease 2.2s both;
+        }
+        .ticker-label {
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 0.82rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--rose-dim);
+            margin-bottom: 12px;
+            opacity: 0.7;
+        }
+        .ticker-track {
+            display: flex;
+            width: max-content;
+            animation: tickerScroll var(--ticker-dur, 25s) linear infinite;
+        }
+        .ticker-track:hover { animation-play-state: paused; }
+        .ticker-name {
+            font-family: 'Caveat', cursive;
+            font-size: 1.35rem;
+            color: var(--text);
+            white-space: nowrap;
+            padding: 0 10px;
+            flex-shrink: 0;
+        }
+        .ticker-dot {
+            color: var(--text);
+            padding: 0 6px;
+            font-size: 0.72rem;
+            display: flex;
+            align-items: center;
+            opacity: 0.6;
+            flex-shrink: 0;
+        }
+        @keyframes tickerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        /* Fade edges */
+        .ticker-container::before,
+        .ticker-container::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 60px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .ticker-container::before {
+            left: 0;
+            background: linear-gradient(to right, var(--bg), transparent);
+        }
+        .ticker-container::after {
+            right: 0;
+            background: linear-gradient(to left, var(--bg), transparent);
+        }
+
+        /* ===== HERO CONFETTI BURST ===== */
+        .hero-confetti-piece {
+            position: absolute;
+            width: var(--w, 8px);
+            height: var(--h, 8px);
+            z-index: 10;
+            pointer-events: none;
+            border-radius: var(--br, 2px);
+            animation: heroConfetti var(--dur, 3s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation-delay: var(--delay, 0s);
+            opacity: 0;
+        }
+        @keyframes heroConfetti {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            15% { opacity: 1; }
+            100% { transform: translate(var(--dx, 0), var(--dy, 400px)) rotate(var(--rot, 720deg)); opacity: 0; }
+        }
+
+        /* ===== LETTERS PAGE ===== */
+        .letters-section {
+            padding: 100px 20px 80px;
+            min-height: 100vh;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+        .section-label {
+            font-size: 0.65rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--rose-dim);
+            margin-bottom: 12px;
+            animation: fadeSlideDown 0.7s ease 0.1s both;
+        }
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 400;
+            font-style: italic;
+            color: var(--text);
+            animation: fadeSlideDown 0.7s ease 0.2s both;
+        }
+        .section-line {
+            width: 40px; height: 1px;
+            background: var(--rose);
+            margin: 20px auto 0;
+            animation: lineExpand 0.8s ease 0.4s both;
+        }
+        @keyframes lineExpand {
+            from { width: 0; }
+            to { width: 40px; }
+        }
+        /* Fancy letters page header */
+        .letters-header {
+            text-align: center;
+            margin-bottom: 65px;
+            position: relative;
+            padding: 50px 20px 40px;
+        }
+        .letters-header::before {
+            content: '\2661  \2661  \2661';
+            display: block;
+            font-size: 1rem;
+            letter-spacing: 8px;
+            color: var(--rose-light);
+            margin-bottom: 18px;
+            animation: fadeSlideDown 0.6s ease 0.1s both;
+            opacity: 0.7;
+        }
+        .letters-header-title {
+            font-family: 'Sacramento', cursive;
+            font-size: clamp(2.5rem, 7vw, 4rem);
+            background: linear-gradient(135deg, #A8D5FF, #5B9FFF, #60A5FA, #93C5FD);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+            margin-bottom: 10px;
+            animation: fadeSlideDown 0.7s ease 0.2s both;
+            filter: drop-shadow(0 2px 10px rgba(59,130,246,0.15));
+        }
+        .letters-header-sub {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            color: var(--text-dim);
+            max-width: 450px;
+            margin: 0 auto;
+            line-height: 1.8;
+            animation: fadeSlideDown 0.7s ease 0.3s both;
+            opacity: 0.96;
+        }
+        .letters-header-deco {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 22px;
+            animation: fadeIn 0.8s ease 0.5s both;
+        }
+        .letters-header-deco .deco-line {
+            width: 50px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--rose-light), transparent);
+        }
+        .letters-header-deco .deco-diamond {
+            width: 6px;
+            height: 6px;
+            background: var(--rose-light);
+            transform: rotate(45deg);
+            border-radius: 1px;
+        }
+
+        /* ===== ENVELOPE CARDS ===== */
+        .letters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 22px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .letter-card-wrapper {
+            animation: cardFloat 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes cardFloat {
+            from { opacity: 0; transform: translateY(50px) scale(0.85) rotate(-3deg); }
+            to { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+        }
+        .letter-card {
+            position: relative;
+            aspect-ratio: 5/4;
+            cursor: none;
+            perspective: 700px;
+        }
+        .envelope-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .letter-card:hover .envelope-container {
+            transform: translateY(-6px);
+        }
+        /* Envelope body — main rectangle */
+        .envelope-body {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(145deg, #A8D5FF, #7B9FFF, #5B9FFF);
+            border-radius: 6px 6px 14px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            padding-bottom: 12px;
+            z-index: 2;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12), inset 0 -3px 8px rgba(0,0,0,0.06);
+        }
+        /* Inner fold lines — V shape */
+        .envelope-body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 50%;
+            background:
+                linear-gradient(to bottom right, rgba(255,255,255,0.12) 49.5%, transparent 50%),
+                linear-gradient(to bottom left, rgba(255,255,255,0.08) 49.5%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        /* Linen texture */
+        .envelope-body::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23t)' opacity='0.06'/%3E%3C/svg%3E");
+            pointer-events: none;
+            border-radius: 6px 6px 14px 14px;
+        }
+        /* Envelope flap — triangular top */
+        .envelope-flap {
+            position: absolute;
+            top: -1px; left: 0;
+            width: 100%;
+            height: 50%;
+            transform-origin: top center;
+            transform-style: preserve-3d;
+            transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 3;
+        }
+        .envelope-flap-face {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, #5B9FFF 0%, #3B82F6 100%);
+            clip-path: polygon(0 0, 100% 0, 50% 85%);
+            border-radius: 6px 6px 0 0;
+            backface-visibility: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        /* Flap inner face (visible when flap opens) */
+        .envelope-flap-back {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, #D0E8FF, #BBE1FF);
+            clip-path: polygon(0 0, 100% 0, 50% 85%);
+            border-radius: 6px 6px 0 0;
+            backface-visibility: hidden;
+            transform: rotateX(180deg);
+        }
+        .letter-card:hover .envelope-flap {
+            transform: rotateX(170deg);
+        }
+        /* Letter peeking out when opened */
+        .envelope-letter-peek {
+            position: absolute;
+            top: 8%;
+            left: 12%;
+            right: 12%;
+            height: 45%;
+            background: #DBEAFE;
+            border-radius: 3px 3px 0 0;
+            z-index: 1;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+            /* Notebook lines on the peeking letter */
+            background-image: linear-gradient(transparent 11px, #93C5FD 11px, #93C5FD 12px);
+            background-size: 100% 12px;
+            background-position: 0 6px;
+        }
+        .letter-card:hover .envelope-letter-peek {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Wax seal */
+        .envelope-seal {
+            position: absolute;
+            bottom: calc(50% - 18px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 36px;
+            height: 36px;
+            background: radial-gradient(circle at 40% 35%, #7B9FFF, #3B82F6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 6;
+            font-size: 15px;
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(200, 60, 90, 0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+            transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .letter-card:hover .envelope-seal {
+            transform: translateX(-50%) scale(1.2) rotate(15deg);
+            box-shadow: 0 5px 20px rgba(200, 60, 90, 0.6);
+        }
+
+        .card-number {
+            font-family: 'Sacramento', cursive;
+            font-size: 2.2rem;
+            color: #fff;
+            line-height: 1;
+            position: relative;
+            z-index: 2;
+            transition: all 0.4s ease;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        .letter-card:hover .card-number {
+            transform: scale(1.12);
+            text-shadow: 0 3px 12px rgba(0,0,0,0.2);
+        }
+        .card-line {
+            width: 25px; height: 1px;
+            background: rgba(255,255,255,0.35);
+            position: relative;
+            z-index: 2;
+        }
+        .card-label {
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.65);
+            position: relative;
+            z-index: 2;
+        }
+        .card-from {
+            font-family: 'Caveat', cursive;
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.85);
+            position: relative;
+            z-index: 7;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        .letter-card:hover .envelope-body {
+            box-shadow: 0 18px 50px rgba(0,0,0,0.35), 0 0 40px rgba(59, 130, 246, 0.12);
+        }
+        /* Opened state */
+        .letter-card.opened .envelope-flap {
+            transform: rotateX(170deg);
+        }
+        .letter-card.opened .envelope-letter-peek {
+            opacity: 0.6;
+            transform: translateY(0);
+        }
+        .letter-card.opened .envelope-seal {
+            opacity: 0.3;
+            transform: translateX(-50%) scale(0.75);
+        }
+        .letter-card.opened .envelope-body {
+            opacity: 0.5;
+            filter: saturate(0.5) brightness(0.85);
+        }
+        .letter-card.opened .card-number { color: rgba(255,255,255,0.4); text-shadow: none; }
+        .letter-card.opened:hover .envelope-container { transform: translateY(-3px); }
+        .letter-card.opened .card-label,
+        .letter-card.opened .card-from { opacity: 0.4; }
+
+        /* ===== READING PAGE — SPIRAL NOTEBOOK ===== */
+        .reading-page {
+            height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 90px 20px 30px;
+            overflow-y: auto;
+        }
+        .notebook-wrapper {
+            position: relative;
+            max-width: 660px;
+            width: 100%;
+            min-height: calc(100vh - 120px);
+            height: auto;
+            margin-left: 15px;
+            animation: paperUnfold 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+            display: flex;
+            flex-direction: column;
+        }
+        @keyframes paperUnfold {
+            from { opacity: 0; transform: scale(0.85) rotateX(8deg); filter: blur(6px); }
+            to { opacity: 1; transform: scale(1) rotateX(0); filter: blur(0); }
+        }
+        /* Spiral rings on the left */
+        .spiral-rings {
+            position: absolute;
+            left: 16px;
+            top: 0;
+            bottom: 0;
+            width: 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            z-index: 20;
+            pointer-events: none;
+            padding: 26px 0;
+        }
+        .spiral-ring {
+            width: 18px;
+            height: 18px;
+            border: 1px solid rgba(110, 86, 64, 0.28);
+            border-radius: 49% 53% 50% 47% / 51% 48% 52% 49%;
+            background:
+                radial-gradient(circle at 35% 35%, rgba(255,255,255,0.75) 0 14%, rgba(229, 214, 191, 0.88) 15% 36%, rgba(74, 56, 41, 0.95) 37% 58%, rgba(32, 23, 16, 0.96) 59% 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.55),
+                inset 0 -1px 2px rgba(0,0,0,0.38),
+                0 1px 2px rgba(0,0,0,0.2);
+            position: relative;
+            transform: rotate(-2deg);
+        }
+        .spiral-ring::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 54% 47% 52% 49% / 49% 53% 47% 51%;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(245, 231, 210, 0.55), transparent 55%),
+                radial-gradient(circle at 70% 72%, rgba(92, 70, 50, 0.25), transparent 58%);
+            opacity: 0.55;
+            z-index: -1;
+        }
+        .spiral-ring::after {
+            content: '';
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            top: 50%;
+            height: 1px;
+            transform: translateY(-50%);
+            background: linear-gradient(90deg, rgba(255,255,255,0.35), rgba(0,0,0,0.2), rgba(255,255,255,0.25));
+            opacity: 0.45;
+        }
+        .spiral-ring:nth-child(3n) {
+            transform: rotate(1.5deg) scale(0.97);
+            border-radius: 52% 48% 50% 49% / 48% 51% 53% 49%;
+        }
+        .spiral-ring:nth-child(4n) {
+            transform: rotate(-1deg) translateX(0.5px) scale(1.02);
+        }
+        .spiral-ring:nth-child(5n) {
+            transform: rotate(2deg) translateX(-0.6px);
+        }
+        /* The notebook paper */
+        .notebook-paper {
+            position: relative;
+            background: #FEFDFB;
+            color: #2c2c2c;
+            padding: 50px 40px 45px 75px;
+            border-radius: 0 4px 4px 0;
+            box-shadow: 5px 5px 25px rgba(0,0,0,0.1), 0 0 50px rgba(0,0,0,0.06), -2px 0 8px rgba(0,0,0,0.05);
+            background-color: #FEFDFB;
+            flex: 0 0 auto;
+            min-height: 100%;
+            border-left: 1px solid rgba(150, 119, 89, 0.22);
+        }
+        .notebook-paper::-webkit-scrollbar {
+            width: 6px;
+        }
+        .notebook-paper::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.03);
+            border-radius: 3px;
+        }
+        .notebook-paper::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.25);
+            border-radius: 3px;
+        }
+        .notebook-paper::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.4);
+        }
+        /* Red margin line */
+        .notebook-paper::before {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            left: 60px;
+            width: 2px;
+            background: #5B9FFF;
+            opacity: 0.45;
+            z-index: 1;
+        }
+        /* Subtle paper texture */
+        .notebook-paper::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            border-radius: 0 4px 4px 0;
+        }
+        .paper-to {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.3rem;
+            color: var(--rose-dim);
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+            animation: textReveal 0.6s ease 0.4s both;
+        }
+        .paper-body {
+            font-family: 'Caveat', cursive;
+            font-size: 1.25rem;
+            line-height: 30px;
+            white-space: pre-wrap;
+            color: #3a3a3a;
+            position: relative;
+            z-index: 2;
+            animation: textReveal 0.8s ease 0.6s both;
+        }
+        .paper-signature {
+            font-family: 'Sacramento', cursive;
+            font-size: 1.8rem;
+            color: var(--rose-dim);
+            text-align: right;
+            margin-top: 25px;
+            position: relative;
+            z-index: 2;
+            animation: sigSlide 0.6s ease 1s both;
+        }
+        @keyframes textReveal {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes sigSlide {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        /* Torn paper exit animation */
+        .notebook-wrapper.tearing {
+            animation: tearOff 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+        }
+        @keyframes tearOff {
+            0% {
+                transform: rotate(0) translateY(0) translateX(0);
+                opacity: 1;
+                filter: blur(0);
+            }
+            25% {
+                transform: rotate(-1.5deg) translateY(-20px);
+            }
+            100% {
+                transform: rotate(-7deg) translateY(-90px) translateX(-30px);
+                opacity: 0;
+                filter: blur(3px);
+            }
+        }
+
+        /* ===== POLAROID PHOTOS ON LETTER ===== */
+        .letter-content-wrapper {
+            position: relative;
+            z-index: 2;
+        }
+        .polaroid {
+            position: relative;
+            background: #fff;
+            padding: 8px 8px 32px 8px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+            transform: rotate(var(--rot, -2deg));
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            flex-shrink: 0;
+            z-index: 2;
+            animation: fadeIn 0.8s ease 1.2s both;
+        }
+        .polaroid:hover {
+            transform: rotate(0) scale(1.05) !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        }
+        /* Tape effect */
+        .polaroid::before {
+            content: '';
+            position: absolute;
+            top: -7px;
+            left: 50%;
+            transform: translateX(-50%) rotate(var(--tape-rot, 2deg));
+            width: 42px;
+            height: 16px;
+            background: rgba(255, 255, 210, 0.65);
+            border: 1px solid rgba(200, 200, 150, 0.2);
+            z-index: 3;
+        }
+        .polaroid-img {
+            width: 220px;
+            height: 220px;
+            background: #f0ebe0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .polaroid-img img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        /* Polaroid layout variants */
+        .polaroid-float {
+            float: var(--float-dir, right);
+            margin: 10px;
+            clear: none;
+        }
+        .polaroid-float.float-left {
+            float: left;
+            margin: 12px 18px 12px -5px;
+        }
+        .polaroid-float.float-right {
+            float: right;
+            margin: 12px -5px 12px 18px;
+        }
+        .polaroid-float.float-delayed-start {
+            margin-top: 120px;
+        }
+        .polaroid-inline {
+            display: inline-block;
+            margin: 15px auto;
+        }
+        .polaroid-pair {
+            display: flex;
+            gap: 18px;
+            justify-content: center;
+            margin: 20px 0;
+            clear: both;
+        }
+        .clear-float { clear: both; }
+        .polaroid-img .placeholder {
+            font-family: 'Caveat', cursive;
+            color: #b8a898;
+            font-size: 0.85rem;
+        }
+        .polaroid-caption {
+            font-family: 'Caveat', cursive;
+            text-align: center;
+            color: var(--text);
+            font-size: 0.85rem;
+            margin-top: 6px;
+        }
+
+        .back-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 12px 25px;
+            background: var(--rose);
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            cursor: none;
+            z-index: 100;
+            transition: all 0.3s ease;
+            animation: fadeIn 0.5s ease 0.5s both;
+        }
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        /* ===== GALLERY — POLAROID THEME ===== */
+        .gallery-section {
+            padding: 100px 20px 80px;
+            min-height: 100vh;
+        }
+        .gallery-masonry {
+            columns: 3;
+            column-gap: 25px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .gallery-item-wrapper {
+            break-inside: avoid;
+            margin-bottom: 30px;
+            animation: galleryPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes galleryPop {
+            from { opacity: 0; transform: scale(0.8) translateY(30px) rotate(var(--rot, 0deg)); }
+            to { opacity: 1; transform: scale(1) translateY(0) rotate(var(--rot, 0deg)); }
+        }
+        .gallery-polaroid {
+            background: #fff;
+            padding: 12px 12px 50px 12px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+            transform: rotate(var(--rot, 0deg));
+            cursor: none;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+        }
+        .gallery-polaroid:hover {
+            transform: rotate(0deg) translateY(-8px) scale(1.03);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.18);
+        }
+        .gallery-polaroid-img {
+            width: 100%;
+            aspect-ratio: var(--ratio, 4/5);
+            background: #f5f0e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .gallery-polaroid-img img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        .gallery-polaroid-img .placeholder {
+            font-family: 'Caveat', cursive;
+            color: #b8a898;
+            font-size: 0.9rem;
+        }
+        .gallery-polaroid-caption {
+            font-family: 'Caveat', cursive;
+            text-align: center;
+            color: var(--text);
+            font-size: 1.05rem;
+            margin-top: 10px;
+            position: absolute;
+            bottom: 14px;
+            left: 12px;
+            right: 12px;
+        }
+
+        /* ===== CONFESSIONS WALL ===== */
+        .confessions-section {
+            padding: 100px 20px 80px;
+            min-height: 100vh;
+        }
+        .confessions-wall {
+            max-width: 1050px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 24px;
+            padding: 10px;
+        }
+        .confession-wrapper {
+            animation: confessionDrop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes confessionDrop {
+            from { opacity: 0; transform: translateY(-40px) rotate(var(--rot, 0deg)) scale(0.7); }
+            to { opacity: 1; transform: translateY(0) rotate(var(--rot, 0deg)) scale(1); }
+        }
+        .confession-note {
+            position: relative;
+            padding: 22px 18px 18px;
+            border-radius: 2px;
+            cursor: none;
+            transform: rotate(var(--rot, 0deg));
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .confession-note:hover {
+            transform: rotate(0deg) scale(1.06) !important;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+            z-index: 5;
+        }
+        /* Note colour variants */
+        .confession-note.note-pink {
+            background: linear-gradient(145deg, #BBE1FF, #A8D5FF);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        .confession-note.note-yellow {
+            background: linear-gradient(145deg, #faf0c8, #f5e4a8);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        .confession-note.note-blue {
+            background: linear-gradient(145deg, #d0e4f5, #bdd8f0);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        .confession-note.note-green {
+            background: linear-gradient(145deg, #d4edda, #c3e6cb);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        .confession-note.note-lavender {
+            background: linear-gradient(145deg, #e8daf5, #dbc8f0);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        .confession-note.note-peach {
+            background: linear-gradient(145deg, #fde2cc, #f8d4b5);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        /* Pin on top */
+        .confession-pin {
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.5);
+            z-index: 2;
+        }
+        .pin-red { background: radial-gradient(circle at 40% 35%, #ff6b7a, #cc3344); }
+        .pin-blue { background: radial-gradient(circle at 40% 35%, #6ba3ff, #3366cc); }
+        .pin-green { background: radial-gradient(circle at 40% 35%, #6bcc8a, #33aa55); }
+        .pin-yellow { background: radial-gradient(circle at 40% 35%, #ffd06b, #ccaa33); }
+        .pin-white { background: radial-gradient(circle at 40% 35%, #ffffff, #cccccc); }
+        /* Torn edge on bottom */
+        .confession-note::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0; right: 0;
+            height: 8px;
+            background: inherit;
+            clip-path: polygon(
+                0% 0%, 4% 60%, 8% 20%, 13% 70%, 17% 10%, 22% 55%, 26% 0%,
+                31% 65%, 35% 15%, 40% 70%, 44% 5%, 49% 60%, 53% 0%,
+                58% 55%, 62% 10%, 67% 65%, 71% 0%, 76% 60%, 80% 20%,
+                85% 70%, 89% 10%, 93% 55%, 97% 0%, 100% 40%, 100% 100%, 0% 100%
+            );
+        }
+        .confession-text {
+            font-family: 'Caveat', cursive;
+            font-size: 1.15rem;
+            line-height: 1.55;
+            color: var(--text);
+            flex: 1;
+        }
+        .confession-by {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.68rem;
+            color: rgba(15, 23, 42, 0.45);
+            text-align: right;
+            margin-top: 12px;
+            letter-spacing: 0.5px;
+        }
+        /* Confession header */
+        .confessions-header {
+            text-align: center;
+            margin-bottom: 55px;
+            position: relative;
+        }
+        .confessions-header-icon {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+            animation: fadeSlideDown 0.6s ease 0.1s both;
+            filter: grayscale(0);
+        }
+        .confessions-header-title {
+            font-family: 'Sacramento', cursive;
+            font-size: clamp(2.2rem, 6vw, 3.5rem);
+            background: linear-gradient(135deg, #5B9FFF, #3B82F6, #60A5FA, #5B9FFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            animation: fadeSlideDown 0.7s ease 0.2s both;
+        }
+        .confessions-header-sub {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.7;
+            animation: fadeSlideDown 0.7s ease 0.3s both;
+        }
+
+        /* ===== PHOTO CAROUSEL BACKGROUND (MOVIE REEL STYLE) ===== */
+        .photo-carousel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+            display: flex;
+            gap: 12px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .carousel-column {
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+            position: relative;
+        }
+        .carousel-column-track {
+            display: flex;
+            flex-direction: column;
+            height: max-content;
+            gap: 8px;
+            animation: carouselScrollUp 120s linear infinite;
+        }
+        .carousel-column-track.scroll-down {
+            animation: carouselScrollDown 120s linear infinite;
+        }
+        .carousel-column-track.scroll-up {
+            animation: carouselScrollUp 120s linear infinite;
+        }
+        .carousel-photo {
+            flex-shrink: 0;
+            width: 100%;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+            opacity: 0.5;
+            filter: brightness(0.85);
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        /* ===== FINALE IMAGE LOADING OVERLAY ===== */
+        .finale-loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(240, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+        .finale-loading-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+        .finale-loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(59, 130, 246, 0.2);
+            border-top-color: var(--rose);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .finale-loading-text {
+            font-family: 'Lora', serif;
+            font-size: 1.1rem;
+            color: var(--text-dim);
+            font-style: italic;
+        }
+        .finale-loading-progress {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            color: var(--text);
+            letter-spacing: 1px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes carouselScrollUp {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+        @keyframes carouselScrollDown {
+            0% { transform: translateY(-50%); }
+            100% { transform: translateY(0); }
+        }
+
+        /* ===== FINALE ===== */
+        .finale {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 80px 20px;
+            position: relative;
+            z-index: 1;
+            background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.05) 60%, transparent 100%);
+        }
+        .finale-title {
+            font-family: 'Sacramento', cursive;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            color: #ffffff;
+            margin-bottom: 25px;
+            animation: finaleReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3), 0 3px 8px rgba(0, 0, 0, 0.4);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+        @keyframes finaleReveal {
+            from { opacity: 0; transform: scale(0.8) translateY(30px); filter: blur(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        }
+        .finale-msg {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            max-width: 600px;
+            font-size: 1.15rem;
+            line-height: 2.2;
+            color: #ffffff;
+            animation: fadeIn 1s ease 1s both;
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 10px rgba(59, 130, 246, 0.4), 0 3px 8px rgba(0, 0, 0, 0.5);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .finale-heart-container {
+            margin-top: 50px;
+            animation: fadeIn 1s ease 1.5s both;
+        }
+        .finale-heart {
+            width: 40px; height: 36px;
+            position: relative;
+            animation: heartPulse 1.5s ease-in-out infinite;
+        }
+        .finale-heart::before,
+        .finale-heart::after {
+            content: '';
+            position: absolute;
+            width: 22px; height: 36px;
+            background: var(--rose);
+            border-radius: 22px 22px 0 0;
+        }
+        .finale-heart::before {
+            left: 21px;
+            transform: rotate(-45deg);
+            transform-origin: 0 100%;
+        }
+        .finale-heart::after {
+            left: 0;
+            transform: rotate(45deg);
+            transform-origin: 100% 100%;
+        }
+        @keyframes heartPulse {
+            0%, 100% { transform: scale(1); }
+            10% { transform: scale(1.12); }
+            20% { transform: scale(1); }
+            30% { transform: scale(1.08); }
+            40% { transform: scale(1); }
+        }
+        .ring-decor {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            animation: ringExpand 3s ease-in-out infinite;
+        }
+        @keyframes ringExpand {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+        }
+
+        /* ===== CONFETTI ===== */
+        .confetti-piece {
+            position: fixed;
+            width: 8px; height: 8px;
+            z-index: 99995;
+            pointer-events: none;
+            animation: confettiDrop var(--dur, 2s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes confettiDrop {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--dx, 0), var(--dy, 400px)) rotate(var(--rot, 720deg)); opacity: 0; }
+        }
+        .magnetic { transition: transform 0.3s ease; }
+
+        /* ===== HERO MINI-GAME ===== */
+        .unlock-status {
+            width: min(100%, 360px);
+            margin-top: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            animation: fadeIn 0.7s ease 0.2s both;
+        }
+        .unlock-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.76rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            opacity: 0.85;
+        }
+        .unlock-bar {
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.15);
+            overflow: hidden;
+        }
+        .unlock-fill {
+            height: 100%;
+            width: var(--unlock-progress, 0%);
+            border-radius: inherit;
+            background: linear-gradient(90deg, #7B9FFF, #3B82F6);
+            box-shadow: 0 0 14px rgba(59, 130, 246, 0.4);
+            transition: width 0.35s ease;
+        }
+        .unlock-ready {
+            color: #ffffff;
+            background: rgba(59, 130, 246, 0.92);
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 0.72rem;
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        /* ===== LETTER CHALLENGE MODAL ===== */
+        .challenge-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(24, 10, 18, 0.35);
+            backdrop-filter: blur(6px);
+            z-index: 12000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+        .challenge-card {
+            width: min(100%, 560px);
+            background: linear-gradient(165deg, #fff7fb 0%, #ffeef6 100%);
+            border: 1px solid rgba(59, 130, 246, 0.28);
+            border-radius: 18px;
+            box-shadow: 0 18px 55px rgba(30, 12, 22, 0.25);
+            padding: 24px 20px;
+            animation: pageFadeUp 0.45s ease;
+        }
+        .challenge-tag {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.68rem;
+            letter-spacing: 2.8px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+        .challenge-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+        .challenge-question {
+            font-family: 'Lora', serif;
+            color: var(--text);
+            line-height: 1.7;
+            margin-bottom: 14px;
+        }
+        .challenge-hint {
+            font-family: 'Caveat', cursive;
+            font-size: 1.08rem;
+            color: var(--text-dim);
+            margin-bottom: 14px;
+        }
+        .challenge-input {
+            width: 100%;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 1rem;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.8);
+            outline: none;
+        }
+        .challenge-input:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+        }
+        .challenge-error {
+            margin-top: 8px;
+            color: #1E40AF;
+            font-size: 0.88rem;
+        }
+        .challenge-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .challenge-btn {
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: #fff;
+            color: var(--text);
+            border-radius: 999px;
+            padding: 9px 16px;
+            font-size: 0.82rem;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            cursor: none;
+            transition: all 0.25s ease;
+        }
+        .challenge-btn:hover {
+            transform: translateY(-1px);
+            border-color: #3B82F6;
+        }
+        .challenge-btn.primary {
+            background: #3B82F6;
+            border-color: #3B82F6;
+            color: #fff;
+        }
+        .challenge-mode {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            color: var(--text-dim);
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.3px;
+            background: rgba(255,255,255,0.55);
+        }
+        .challenge-activity {
+            background: rgba(255,255,255,0.55);
+            border: 1px dashed rgba(59, 130, 246, 0.45);
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+        }
+        .scramble-word {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            color: var(--text);
+            text-align: center;
+        }
+        .tap-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .tap-count {
+            font-family: 'Playfair Display', serif;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .tap-heart-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            background: radial-gradient(circle at 35% 30%, #A8D5FF, #3B82F6 70%);
+            color: #fff;
+            font-size: 1.7rem;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+            cursor: none;
+            transition: transform 0.15s ease;
+        }
+        .tap-heart-btn:active {
+            transform: scale(0.92);
+        }
+        .reward-badge {
+            position: fixed;
+            right: 18px;
+            top: 78px;
+            z-index: 1100;
+            border-radius: 16px;
+            padding: 10px 12px;
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            background: rgba(255, 248, 252, 0.88);
+            backdrop-filter: blur(6px);
+            box-shadow: 0 10px 24px rgba(45, 12, 28, 0.16);
+            text-align: right;
+        }
+        .reward-badge-label {
+            font-size: 0.62rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+        .reward-badge-value {
+            font-family: 'Playfair Display', serif;
+            color: var(--text);
+            font-size: 1rem;
+            margin-top: 2px;
+        }
+        .reward-toast {
+            position: fixed;
+            right: 18px;
+            top: 138px;
+            z-index: 1100;
+            border-radius: 14px;
+            padding: 8px 12px;
+            color: #fff;
+            background: linear-gradient(120deg, #7B9FFF, #3B82F6);
+            box-shadow: 0 12px 28px rgba(59, 130, 246, 0.35);
+            animation: pageFadeUp 0.35s ease;
+        }
+
+        /* ===== LOADING ===== */
+        .loader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg);
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        .loader.done { opacity: 0; visibility: hidden; }
+        .loader-ring {
+            width: 40px; height: 40px;
+            border: 2px solid rgba(59, 130, 246, 0.15);
+            border-top-color: var(--rose);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text {
+            font-family: 'Caveat', cursive;
+            color: var(--rose-dim);
+            font-size: 1.1rem;
+            margin-top: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            body { cursor: auto; }
+            .cursor-dot, .cursor-ring { display: none; }
+            .nav { padding: 12px 10px; gap: 4px; flex-wrap: wrap; }
+            .nav-btn { font-size: 0.85rem; padding: 6px 12px; letter-spacing: 0.6px; }
+            .hero { padding: 86px 14px 12px; }
+            .hero-main { margin-top: 0; }
+            .hero-title { margin-bottom: 24px; }
+            .hero-message { line-height: 1.75; margin-bottom: 24px; }
+            .hero-cta { margin-bottom: 16px; }
+            .ticker-label { font-size: 0.72rem; letter-spacing: 4px; margin-bottom: 8px; }
+            .ticker-name { font-size: 1.15rem; }
+            .ticker-dot { font-size: 0.62rem; padding: 0 5px; }
+            .unlock-status { width: min(100%, 320px); }
+            .challenge-card { padding: 20px 16px; }
+            .challenge-btn { cursor: pointer; }
+            .tap-heart-btn { cursor: pointer; }
+            .reward-badge { top: 108px; right: 10px; }
+            .reward-toast { top: 164px; right: 10px; }
+            .letters-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; }
+            .gallery-masonry { columns: 2; }
+            .notebook-paper { padding: 40px 25px 35px 50px; }
+            .notebook-paper::before { left: 38px; }
+            .spiral-rings { display: none; }
+            .notebook-wrapper { margin-left: 0; }
+            .polaroid-img { width: 140px; height: 140px; }
+            .polaroid { padding: 6px 6px 25px 6px; }
+            .polaroid-float { float: none !important; margin: 10px auto !important; display: block; width: fit-content; }
+            .polaroid-pair { flex-direction: column; align-items: center; }
+        }
+        @media (max-width: 480px) {
+            .hero { padding: 80px 12px 10px; }
+            .hero-title { font-size: clamp(2.6rem, 14vw, 3.5rem); margin-bottom: 20px; }
+            .hero-message { font-size: 0.94rem; max-width: 340px; margin-bottom: 20px; }
+            .hero-cta { font-size: 0.76rem; letter-spacing: 1.2px; }
+            .challenge-title { font-size: 1.2rem; }
+            .challenge-question { font-size: 0.95rem; }
+            .reward-badge-value { font-size: 0.9rem; }
+            .letters-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .gallery-masonry { columns: 1; max-width: 400px; }
+            .card-number { font-size: 1.8rem; }
+            .polaroid-img { width: 80px; height: 80px; }
+            .balloons-container .balloon { --size: 30px; }
+            .cake-container { width: 90px; height: 100px; margin-bottom: 5px; }
+            .photo-carousel { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// =============================
+//  CONFIG — EDIT HERE
+// =============================
+const CONFIG = {
+    name: "Shivi",
+    heroMessage: "Your favourite people have something to say. Each envelope holds a letter, a memory, a little piece of love that\u2019s yours to keep.",
+    friends: ["Mom", "Dad", "Aaji-Baba", "Aau-Anna", "Ishwari", "Sahil", "Sujal", "Behen", "Riti", "Rhythm", "Vedang", "Radhika", "Pari", "Lesha", "Aarya", "Akshita", "Tulika", "Janhvi di", "Raktim", "Aryan", "Harshita", "Aditya", "Kartik", "Vaishnav", "Sania", "Ranjali"],
+    letters: [
+        { from: "Mom", message: "*My dear most, my Sonpapdi !!!*\n\nYou are my friend rather best...best...bestest and closest friend forever. It start before your birth, when you use to move inside, kick and rotate, I use to talk to you about everything, read stories, worked hard. And then after 9 months God blessed me with lovely baby boy with the cute smile, bright eyes, hyperactivity.\nBittu, I'm the luckiest and happiest mother to have you as my child.\nI'm always sure you will do good in Career and Profession too, but as always be BEST HUMAN: caring, understanding, supportive, motivating, down to earth, empathetic, enthusiastic, sporty, creative, artistic.\n\nI'm always PROUD of you and I'm sure that you will never let me down...\n\nTons of love and blessings, Shivnu 🩷🩷🩷\n\nMany many happy returns of the day... Happiest Birthday Dear Pillu !!!! I LOVE YOU so so very much... ❤️❤️❤️❤️\n\nइलूच पिलू, टिल्लूचे पिलू...\nगोर गोर पिल्लू, छान छान पिल्लू...\nपिल्लुची आई... आईच________.\n\nStay blessed, happy, healthy, wealthy, satisfied, peaceful and Safe always and forever...\n\nLove you baccha...💞💞\nLots of blessings..." }, 
+        { from: "Dad", message: "Happy 21st Birthday, Dear Shivraj ! … 🍫🎂\n\nYou’ve always made us proud .. ❤️\nnot just by being smart, but by being kind, strong, and grounded. Watching you grow into such a confident and caring young man has been one of the greatest joys of our lives.\n\nMay you keep chasing your goals with the same sporty spirit, stay humble in your success, and always carry that big heart of yours wherever life takes you.\n\n21 is just the beginning ..\n\nplay hard, dream big, and stay true to yourself. We’re always with you, cheering you on.\n\nWith all our love & care 🎂✌🏽\nDaddy" },
+        { from: "Aaji-Baba", message: "\"ज्याचं नावच 'शिवराज' आहे, त्याच्या कर्तृत्वाचा सुगंध सर्वत्र दरवळू दे. आमच्या राजासारख्या नातवाला वाढदिवसाच्या भरभरून शुभेच्छा! तुझा अभिमान वाटेल असेच कार्य तुझ्या हातून घडत राहो.\"\nआजी बाबांकडून शिवराजला वाढदिवसाच्या खूप खूप हार्दिक शुभेच्छा.", photos: [{ src: "photos/dadadadi.1.jpg", caption: "" }, { src: "photos/dadadadi.2.jpg", caption: "" }] },
+        { from: "Nana Nani", message: "प्रिय, शीवा वाढदिवसानिमित्त तुला लाखो शुभेच्छासह, आयुरारोग्यसंपनन दिर्घ आयुष्य प्राप्त होवो हीच ईश्वर चरणी प्रार्थना..\nबेटा आमचे दोघांन चे जग म्हणजे तुच, तुझे ते आमच्या विषयी चे प्रेम, समजून घेण हे आयुष्यातील मोठ समाधान व अभिमान वाटावे असे वागणे खूप प्राऊड फिल करते..\nआयुष्यात नेहमी प्रामाणिक राहून वेळेची कदर कर, मग बघ यश तुझेच आहेत, तु तसाच आहे, पण हे अनुभवातून बोलते बेटा,.\nतु नेहमीप्रमाणेच जसा आहेस तसाच सुदृढ, आनंदात समाधानकारक रहावा..हाच आमचा मनापासून आशिर्वाद,\nतुझेच..आऊ आण्णा" },
+        { from: "Ishwari", message: "Hi Chatkor!!!🌸\n\nHappy Happy Birthday to my favourite person! Out of all the people in the world, I’m so grateful that life brought me to you. You make my world feel calmer, happier, and a lot more meaningful. I hope this year gives you everything you dream of, because you deserve nothing less. \nI have seen you grow more and more every year and tbh smarter heheh.. You somehow manage to take care of everything around you, cook amazing food, and still be the same childish, cute person who makes me laugh.\n\nActually i always felt a connection with you since yawar sir class and it was an instant match and u were sooo welcoming and warm with me. \nI hope you stay the same amazing person and remain the calm funny tom !! hehe and PS. Don't stop being a cutie love youuuuu!!♥️♥️\nYou are this best listener, patient , loving , caring , cutest , smart, sweet, thoughtful, hardworking, reliable person.. tbh im short of words ur everything. I think ur way mature than 21 and just i hope tu aur and aur mature ho. Your aura just brightens me everyday and tbh I am surving college because of you . But yeahhhhh !!!\nFinally enjoy your birthday and I'm happy I'm there hehe love you. \n\nYours Chatkor !!♥️" },
+        { from: "Sahil", message: "Happy Birthday Shivi,\n\nFirst of all, thanks to Satyaki… jiske vajah se tune text kara and hum dost banne ….. LEKIN SATYAKII?? QUESTIONABLE CHOICE!!! Pr thike uske vajah se hum mille toh thike\n\nShivi, tu mere 11th me hui hui sabh se pyaaari cheese hai… i really miss sonawane k class  me piche beth k sonawane ki hi biwi chaitali aur purkar k chakkar k baarein me baat krna 😭😭\n\nHonestly, I’m not saying this just because you are reading this… ISTG, I swear on my mom… if someone taught me the real meaning of friendship, it is you. After meeting you and spending so much time with you, I am not able to make new close friends because you set the benchmark of friendship so high that no matter how many efforts others make, compared to you it always feels less… and it will always be less.\n\nIn my life, no one can ever replace you. I was a fool, I listened to others(that fucking BITCH)  and judged you. You might have forgiven me, but I will always regret that. But honestly, maybe it was good that it happened, because after that we became even closer.\n\nShivi, on this auspicious day I just want to say….you are a gem of a person. I never want to lose you. Shayad mere mom dad ko bhi nhi pata k mera ek sagga bhai bhi hai…Right now and always, the closest person in my life, including everyone, is you. And no one can ever replace you.\n\nMujhe nhi pata me kiss tarah tere kaam aa pau… pr ek call durr hu yaad rakhna ye cheese …. Meri jaaann hai tu … dilll ka tukda hai (pura dill hi tha… vo palak tod gai toh abh tukde reh gaye😭) I love youuuuuuuuuu soo muchhhhh…. Mere taraf se ek gilli faffiiiiii 😘😘😘😘 \n\nNashik aaja iss baar dmora me upar tere sath jaunga 😈😈😈😈\n\nJust one call away, always.  \nKeep growing, keep succeeding.  \nI love you sooooo much, Shivi darling.  \nPlease stay the same always.", photos: [{ src: "photos/sahil1.jpg", caption: "" }, { src: "photos/sahil2.jpg", caption: "" }] },
+        { from: "Sujal", message: "Wish you a very happy birthday Cutieee!!!\n\nIt is seldom that one finds friends that they wanna keep forever\nYou are one of them. I LOVE YOU SOOO MUCHHH!!!!\n\nI miss you so much, mera. I love you so so much, we don't get to meet so often but when we meet it feels like we never went apart.\n\nI really like how you are always present no matter what you are going through (but you never tell me your problems, so not fair)))\n\nBut anyways I love you so much!!!! May god bless you!!!\n\nYou being out versions of me I've never seen and at the same time I still get to be the stupid 17 years old with you... distance didn't change what we had, it just redefined it. I love how we keep choosing each other over everything else people have to say!!!!!\n\nThank you for being one of my favourite people to be around when things get hard or I'm not able to control my happiness. I love how everyone around me knows how much I love you!!!! And it makes me so happy that I am able to give to them the love you give to me.\n\nIdk how many people I've met in these 20 years but I'm very sure that my eyes would still find yours in every crowd I see. Thank you for being mine!!!!\n\nWe've spent 5 years of our life knowing each other and I wish to spend every future one knowing you. Work takes away a lot from us physically and emotionally but I'm so happy that being with you or even a phone call makes me feel better and recharged. You let me be the person I am.\n\nThank you for being my person, someone I know who has always got my back and the same thing goes the other way round.\n\nYou have all my heart and soul!!!\n\nStay blessed\nHave fun\nLove you cutie\nKeep me forever\nMiss me\nLove you!!", photos: [{ src: "photos/sujal1.jpg", caption: "" }, { src: "photos/sujal2.jpg", caption: "" }] },
+        { from: "Behen", message: "A very happy birthday!\n\nTime moves fast. You turned 67 in the blink of an eye.\n(I dont know how to be nice)\n\nKeep shinning that bald head of yours!\n\n-your annoying (but pretty) sister", photos: [{ src: "photos/BEHEN1.JPG", caption: "" }, { src: "photos/BEHEN2.JPG", caption: "" }] },
+        { from: "Riti", message: "Happyy Birthdayyy Shivii,\n\nI was trying to think of a nice way to start this, but honestly there isn’t one, so I’ll just say it. You’re one of the most annoying people I know. Like genuinely. I don’t know how you do it, but you do it very consistently.\n\nBut, you’re also one of my favourite people (not favourite favourite but like somebody i can tolerate, toh sir pe mat chadhna) unfortunately.\n\nWe’re literally Tom and Jerry (tom toh kaala bhi tha). Fighting all the time, arguing over the most useless things, and still somehow ending up on the same side. And it’s actually a bit scary how SIMILAR we are like literally the same bad humour(tere bday hai isiliye khudka bhi bura bolri), same chaotic energy that probably irritates everyone else, somehow holding the power to ragebait everybody, and so many more things. Saying I’m your female (arguable) version is not even wrong, and I don’t like admitting that.\n\nBut jokes apart, there’s a side of you that I genuinely respect a lot.\n\nYou’re one of the few people who actually shows up for his people in a calm, sensible, grounding way. I know whenever things get messy, I can count on you to just sit, listen, and somehow make things make sense. And that means a lot. More than I’ll ever say to your face (i think today’s the only day you get to see sweet ritisha so cherish it).\n\nJust don’t let people take advantage of you. You’ve done that before, and not everyone deserves that version of you.\n\nI’m really glad we got close. I didn’t expect it, but I’m glad it happened. You’ve become someone I know I can rely on, and that’s not something I say for a lot of people.\n\nEven though you’re the most irritating person i’ve ever met, i’m glad I got a brother in you.\n\nOkay that’s it, I’m not writing anything nicer than this.\n\nHappy Birthday, idiot.", photos: [{ src: "photos/riti1.jpg", caption: "" }, { src: "photos/riti2.jpg", caption: "" }] },
+        { from: "Rhythm", message: "Happyyyyy birthdayyy Shiviiiiii 🫶🏼💥💗🥳🐵\n\nFirst things first, I am soooo sorryyyy that I’m not there for your birthday, but I hope this message makes up for my absence, even if it’s just for a few minutes..\nIf you don’t already know, you’re a greattt friend. Tu ek aisa happy sun hai (even though tu thoduuu sa less gora hai 😭) like I could never imagine myself or anyone around you upset or sad.\n\nBohut suddenly aur bohut out of nowhere hum dost bane, but I know that if I’m ever stuck somewhere, I can count on you but I want you to know that I will alwaysss be here for you. I know bohut cliche, overused line hai but I genuinelyyy mean it from my heart \nand the way you look out for other people, I hope you know that there is someone who will always want to see you happy and always look out for you.\n\nI’m really grateful to have you as a friend EVEN THO tu kitna bhi “dhanji dhanji” chidhaye 😭 and main chahe kitni bhi pareshan ho jaun but honestly, agar tu pareshan nahi karega toh woh bhi mujhse dekha nahi jayega. So haan, kar pareshan, tera unsaid right hai voh.\n\nThere aren’t many people jinke liye I would selflessly do things or cross oceans and mountains or whatever, but tu somehow, pata nahi kaise, uss category mein aa gaya hai. Hahaha, jk, genuinely aa gaya hai.\n\nOkay ab i think I’ve already said a lot except the part which is.. Happyyy birthdayyy Seeeeeevraaaajj !!!! \n\nI’ll never stop calling you kala HAHAHA, and you’ll always see me cheering for you BUT OBVIO?!💗", photos: [{ src: "photos/rhythm1.jpg", caption: "" }, { src: "photos/rhythm2.jpg", caption: "" }] },
+        { from: "Vedang", message: "Happy birthday shivi\n\nDon't know kaha se shuru karu but the bond has been great it has been fun since day 1 .Cllg me bahut early mille the sem 1 me that grp was the most fun we had .tab didn't know you jyada fir pura 1 year yawar ke class me saath hi the.it was full of ups and downs but it was good.beech me cheeze kafi weird ho gyi thi but I am glad they are back to normal. You have always been a supportive and reliable Friend and I am greatful for that.Abhi as roomates it's fun and hope to have lots more of it.Jaldi jaldi come out with your real identity ishwari ko bata de ki you are gay fir we will have lots of more fun together 🫶🥰 raat ko tere momos churane me bahut maja aatay 😂 .aur haa bhai pata nhi kab but ek din brother apna body banega wo jo apna goal he pura karke rahenge looking forward to it .jis din body ban jaygi na by God itna flex karenge.bhai apne gym bakchodi sessions are the best. Valo seekh ja gandu galat calls dete rehtay fir sab laptop pe blame kartay.it has been crazy and looking forward to more of it .413 has been fun with you apna beautiful fortress of solitude( tu rehta nhi hein udhar utna wo alag baat 😂) but yes .wish you all the best bhai a very happy birthday and yes i hope you achieve everything you want to. Thanks kaafi cheeze samjh ke lene ke liye. Happy birthday lawde once again .", photos: [{ src: "photos/vedang1.jpg", caption: "" }, { src: "photos/vedang2.jpg", caption: "" }] },
+        { from: "Radhika", message: "Heyy princess,\nPrakat dinachya Hardik shubhecha Princess 🧚🎂\nIdk mi Kay bolu but u are the brother🫂 with whom I can share anything and everything without any fear and always my partner in crime be it nasik or Ahmedabad... I really miss you princess 😭😭 i wish u the best internship and best job so tu mala je hava te gheun deshil 😂😂😂 once again happy Birthday to the best princess in the anant world.........💜🤍 I hope this new gives u thodi shi buddhi 🤧😚😚😚 sending you virtual hugs 🫂🫂🫂🫂🫂🫂 karan yeu nai shakat ticket khup mahag ahe 😭😭😭", photos: [{ src: "photos/radhika1.jpg", caption: "" }, { src: "photos/radhika2.jpg", caption: "" }] },
+        { from: "Pari", message: "dear Shiviiiiii,\nhappyyyy birthdayyy🫶\n\ni don’t even know where to start because honestly, you’ve been a part of my life since the start of my college life, and now here we are almost in the last year of college life.\nout of all the things about you, i think what stands out the most is how understanding you are. like, i can literally rant about anything, no matter how random or unnecessary it might be and you’ll just sit there, listen, and somehow help me in someway. you don’t even realize how rare that is.\nalso, i just wanted to say thankyou, for being there during my lows, especially during my breakup. you have this way of just being there for people, no questions asked, no hesitation and i really admire that about you.you’re genuinely one of the kindest people i know. you never say no to helping anyone, even when you probably should sometimes. i hope you never lose that part of yourself, but i also hope life gives you back the same care and effort you give to everyone else.\ni just want you to be really happy. like the kind of happy where everything works out for you, you achieve all the success you deserve, and you’re surrounded by people who appreciate you as much as you deserve to be appreciated.", photos: [{ src: "photos/pari1.jpg", caption: "" }, { src: "photos/pari2.jpg", caption: "" }] },
+        { from: "Lesha", message: "hey happy birthday miss you so much i honestly dont even know what to say because there is so much on my mind but also no words at the same time you know im really bad at expressing how i feel but yeah just wishing you the happiest birthday ever i hope you have the most amazing day and an even better year ahead and that everything you wish for always comes true i really miss sitting and talking to you and all the masti we used do with everyone i miss all of that so much and honestly more than ahmedabad i think i just miss you guys because you all are the reason that place means anything to me \ny’all really dont understand how important you all are in my life and maybe never will but i know it and theres a reason behind it which im not getting into right now but yeah just know that i miss you a lot and \nI hope you have the best day ever", photos: [{ src: "photos/lesha1.jpg", caption: "" }, { src: "photos/lesha2.jpg", caption: "" }] },
+        { from: "Aarya", message: "Happy birthday shivi babes!!  You’re an incredible human and I feel so lucky to know you! A\nSo very grateful for all the laughs and memories shared :) you’re truly the best (at everything) I will never forget you doing assignments between your foundation football matches (that was peak) haha. Thank you for always being there for everyone just know that you’re SOOOOO loved! \nHave the best day ever (we are missing you a little more today) and you already know you can reach out to us anytime 💖\nLove you loads ! Happy birthday once again", photos: [{ src: "photos/aarya1.jpg", caption: "" }, { src: "photos/aarya2.jpg", caption: "" }] }, 
+        { from: "Akshita", message: "Shivi babesss,\n\nI don’t think I say this enough, but you’re honestly one of my favorite juniors. From the first time we started talking, you just had this energy that made everything feel lighter and more fun. You’re sweet, a little crazy in the best way, and somehow always manage to make people around you smile.\n\nSeeing you grow, handle things, and still stay the same genuine person is something I really admire. I’m always quietly rooting for you, even if I don’t say it out loud all the time.\n\nJust remember, no matter where life takes us after college, you’ll always be my Shivi babes.  And I hope you’ll always be there for my random rants, angry phases, and doing mastiii all the time hehehe🤭\n\nStay amazing  and never stop being you.\n\nLots of love,\nAkshita🤍" },
+        { from: "Tulika", message: "Happy Birthday, Shivi 💛\n\nI’m so grateful to have you in my life. You might be my junior, but you’ve been such a constant and a genuinely wonderful friend. I appreciate you more than I say, your care, your presence, and of course your elite cooking.\n\nI’ll always cherish our night walks, endless conversations, and coffee moments, they mean a lot to me.\n\nThank you for being you. I’m really lucky to have you. Wishing you so much happiness and success this year.\n\nHappy birthday 🤍", photos: [{ src: "photos/tulika1.jpg", caption: "" }, { src: "photos/tulika2.jpg", caption: "" }] },
+        { from: "Janhvi di", message: "Happy Birthday Orange 🍊\n\nTu na fakta maza junior nahi ahes… tu khup jast ahes. Aplya mount trips, Ahmedabad madhle cafe hopping, tasach tas basun gossip karna, life che sagle problems share karna… he sagla mala khup close vatat.\n\nTujhyasobat asle ki time kasa nighun jato kalat pan nahi. Kahi pan bolu shakto, kahi pan share karu shakto… no judgement, no filter… just aplya vibes.\n\nTu mazhya life madhe khup important ahes—kadhi brother sarkha, kadhi best friend sarkha, ani kadhi asa koni jyala sagla sangta yet.\n\nAsech raha… thoda pagal, thoda cute, pan always real. Aplya ajun khup trips, cafe talks ani long gossip sessions baki aahet ☕\n\n– Tujhi santra 💛", photos: [{ src: "photos/JHANVI1.JPG", caption: "" }, { src: "photos/JHANVI2.JPG", caption: "" }] },
+        { from: "Raktim", message: "Happy birthday Chakki. From your chutiya era in the 1st year to your chutiya era right now, you've come a long way. You've been an amazing (but nevertheless stupid) friend and I am glad that I had someone like you in my life through the ups and downs. Always be the same you, always keep being the gandu that you are, always keep being the creative and helpful person that you are and always keep being Shivraj. You're an amazing human being imagine being 21 you're officially unc status. Happy Birthday bhai. I hope you have a great day and an amazing year ahead. I love you and I am so proud of you. Chal abhi gand marwale apni 🎉🎂💞💯", photos: [{ src: "photos/RAKTIM1.JPG", caption: "" }, { src: "photos/RAKTIM2.JPG", caption: "" }] },
+        { from: "Aryan", message: "Happy birthday broooooooooooooooooooooo 🎉🥳🔥\nSo sorry yaar mai tere birthday par nhi hoon 😔, but wish you a very good year and good life ❤️✨\nThoda formal lag rha toh casually bol deta hoon 😏 — Happy birthday BSDK 😂🍻\nRemember our mujra in Mt. Abu 💃😂 bro it was a crazy memory 🤯 bhai kya bana diya tha humko 🤣 but I want to thank you for that memories 🙌❤️\nYou were with me even when I was new here 🫂 never felt ki mai kuch chodh kar aaya 💯\nYou are a great human being ❤️ haan bas thoda chutiya hai 🤡 galat logo ke chakkar mai fas jaata hai 😤 par phir sahi ho bhi jaata hai 😎\nYaar I still remember our daaru pehli baar 🍺😂 BSDK daaru peena seekh 😭🤣\nI would always remember you and our memories 📸❤️ you are one of my best friends I have ever come across 🤝🔥\nYaar next year apan yahan nhi honge 😭💔 fuckkkkkk 🥲 but I will always remember our friendship ❤️🫂\nHAPPY BIRTHDAY KALUEEEEEEEEEEE 😂🔥\nsorry sorry SHIVRAJJJJ 😭😂🎂🥳", photos: [{ src: "photos/aryan1.jpg", caption: "" }, { src: "photos/aryan2.jpg", caption: "" }] },
+        { from: "Harshita", message: "Happiest birthday Shivi. First of all cheers and evil eye for our 12 years of friendship and we have nver looked back. You are my true ride or die and a fucking constant. From school life to sitting on same bench, playing on school grounds, talking for hours about our lives drama girlfriends boy problems sharing tiffins to going different olaces in the world and meeting once or twice a year talking about lives we spend over pizza and coffee we know each other pur friendship never saw a distance. I can never tell in words how grateful i am for our friendship and your existence. Seeing you busy thriving in life happy and doing good in life you deserve it all. I love you so much Shivi. Stay blessed and happy always im never going anywhere. Again happiest 21 best person🤍", photos: [{ src: "photos/harshita1.jpg", caption: "" }, { src: "photos/harshita2.jpg", caption: "" }] },
+        { from: "Kartik", message: "Dear Engineer with no Logic (aka chutiya shiv)\n\nHappy birthday gandu, may god bless you with some brain cells. Okay in all seriousness, you've been a decent friend and an alright roommate. Thike hai ab pura serious. You honestly made my anant hostel life much better than i'd ever expect. I'm glad you were my roommate because I dont know how I'd survive without our bond on non veg and girls lmao. All the best for your future and yeah gand mara.", photos: [{ src: "photos/KARTIK1.JPG", caption: "" }, { src: "photos/kartik2.jpg", caption: "" }] },
+        { from: "Vaishnav", message: "Heyy Shivi,\nhappyy birthdayy to the best roommate I ever had and the one who actually stayed for more than a sem. You genuinely have no idea how much you helped me with the number of medicines you kept handing me whenever I was sick😭😭. Really missing 417 and our random gossip sessions right now (vedang is not ur best roommate, i am......dont forget). aur bhai, chips thoda kam khaya kar😭\n\nanyway, have a great day and lets have a final bb match after our juries. meet soon" },
+        { from: "Sania", message: "Happyyy Birthday Shivraj! 🌚\n\nI hope in the coming years, your life is everything you have dreamt of !🌻\n\nI wish for all the people to come in your life who would look out for you when you are being extra nice, and double it up and keep sprinkling it on you. (AND BE BITCHY FOR YOU BECASUE YOU DONT KNOW HOW TO😭) who notice the way you notice all the details in every little thing. who look at the small efforts. the way you show up even when you are tired. the quite care when you sit and listen to anyone who comes and talks to you. may it be for just another round of laughs or for a deep debate or review, you have the patience for it all. 🫡\nAnd its so true, not because of the fact that you have good knowledge or skills to explains something to anyone, but because you go beyond the minimum to do something if someone asks or talks to you.  I have seen you look out for people who are probably not more than aquantainces and more than beyond for the ones you love. Stay the same person you areee, dont let this studpid adult life suck out the nice in you :) 🤪\n\nWISHING YOU THE MOST LOVED AND CARED AND HAPPY AND HEALTHY AND GOOD LIFE AHEAD BROSKI Hev funhhh!!!!🤩🤩🤩" },
+        { from: "Ranjali", message: "Hey Shivraj,\n\nI don't even know where to start, but I'm really grateful to have a junior like you. You've always been so polite, calm, and caring towards everyone. And the way you treat me like a small baby… honestly, it's annoying sometimes (because mai badi ho gae hu😭😭)but also something I secretly appreciate a lot 🥹😄\n\nAll those memories  going for garba, making fake laugh for photos (candid please 📷) sitting at the riverfront, and our random canteen meets  they're some of the best moments I'll always remember. And yes, the Bloom Club… I'm sooo grateful to see you there (pure sarcasm 😂).\n\nBut jokes apart, you've genuinely been a very kind and supportive person, and I'm really happy to know you. Wishing you all the success and happiness in your future. I hope you achieve everything you're working towards and more.\n\nAnd please, wherever you go, keep spreading your calm and caring nature… \nWishing you the happiest birthday ever....🥂💕\n(Aur sach me mai badi ho gae hu yarrr😭😭)", photos: [{ src: "photos/Ranjali1.jpg", caption: "" }, { src: "photos/Ranjali2.jpg", caption: "" }] },
+        { from: "Aditya", message: "To the guy who made my school days worth remembering,\n\nFrom basketball to seat partner to your funny lame jokes , everything that felt normal then is now 'perfect' as I remember\n\nTujhe malum hai mai kabhi khud se teri tarif nahi karne wala  🙂‍↕️ , isliye through Ishwari keh raha hu !\n YOU ARE WHOLESOME MAN , PEOPLE DESERVE A FRIEND LIKE YOU\n\nThik se padh Dyslexic Bc !" },
+    ],
+    photos: [
+        { src: "photos/aarya1.jpg", caption: "", ratio: "4/5", rot: -3 },
+        { src: "photos/aarya2.jpg", caption: "", ratio: "3/4", rot: 2 },
+        { src: "photos/aditya.1.jpg", caption: "", ratio: "1/1", rot: -1.5 },
+        { src: "photos/aditya.2.jpg", caption: "", ratio: "4/5", rot: 3 },
+        { src: "photos/Akshita.1.jpg", caption: "", ratio: "3/4", rot: -2 },
+        { src: "photos/Akshita.2.jpg", caption: "", ratio: "1/1", rot: 1.5 },
+        { src: "photos/aryan1.jpg", caption: "", ratio: "4/5", rot: -2.5 },
+        { src: "photos/aryan2.jpg", caption: "", ratio: "3/4", rot: 2.5 },
+        { src: "photos/BEHEN1.JPG", caption: "", ratio: "1/1", rot: -1 },
+        { src: "photos/BEHEN2.JPG", caption: "", ratio: "4/5", rot: 1 },
+        { src: "photos/dad.1.jpg", caption: "", ratio: "3/4", rot: -3 },
+        { src: "photos/dad.2.jpg", caption: "", ratio: "1/1", rot: 2 },
+        { src: "photos/dadadadi.1.jpg", caption: "", ratio: "4/5", rot: -1.5 },
+        { src: "photos/dadadadi.2.jpg", caption: "", ratio: "3/4", rot: 1.5 },
+        { src: "photos/funnyphoto1.jpg", caption: "", ratio: "1/1", rot: -2 },
+        { src: "photos/funnyphoto2.jpg", caption: "", ratio: "4/5", rot: 2.5 },
+        { src: "photos/funnyphoto3.jpg", caption: "", ratio: "3/4", rot: -0.5 },
+        { src: "photos/funnyphoto4.jpg", caption: "", ratio: "1/1", rot: 3 },
+        { src: "photos/FUNNYPHOTO5.JPG", caption: "", ratio: "4/5", rot: -2 },
+        { src: "photos/funnyphoto6.jpg", caption: "", ratio: "3/4", rot: 1 },
+        { src: "photos/funnyphoto7.jpg", caption: "", ratio: "1/1", rot: -1.5 },
+        { src: "photos/funnyphoto8.jpg", caption: "", ratio: "4/5", rot: 2 },
+        { src: "photos/funnyphoto9.jpg", caption: "", ratio: "3/4", rot: -1 },
+        { src: "photos/harshita1.jpg", caption: "", ratio: "1/1", rot: 1.5 },
+        { src: "photos/harshita2.jpg", caption: "", ratio: "4/5", rot: -2.5 },
+        { src: "photos/ishwari.1.jpg", caption: "", ratio: "3/4", rot: 2 },
+        { src: "photos/ishwari.2.jpg", caption: "", ratio: "1/1", rot: -0.5 },
+        { src: "photos/JHANVI1.JPG", caption: "", ratio: "4/5", rot: 1 },
+        { src: "photos/JHANVI2.JPG", caption: "", ratio: "3/4", rot: -2 },
+        { src: "photos/KARTIK1.JPG", caption: "", ratio: "1/1", rot: 3 },
+        { src: "photos/kartik2.jpg", caption: "", ratio: "4/5", rot: -1.5 },
+        { src: "photos/lesha1.jpg", caption: "", ratio: "3/4", rot: 2.5 },
+        { src: "photos/mom.1.jpg", caption: "", ratio: "1/1", rot: -1 },
+        { src: "photos/mom.2.jpg", caption: "", ratio: "4/5", rot: 1 },
+        { src: "photos/nananani.1.jpg", caption: "", ratio: "3/4", rot: -2 },
+        { src: "photos/nananani.2.jpg", caption: "", ratio: "1/1", rot: 2 },
+        { src: "photos/pari1.jpg", caption: "", ratio: "4/5", rot: -3 },
+        { src: "photos/pari2.jpg", caption: "", ratio: "3/4", rot: 1.5 },
+        { src: "photos/radhika1.jpg", caption: "", ratio: "1/1", rot: -0.5 },
+        { src: "photos/radhika2.jpg", caption: "", ratio: "4/5", rot: 2.5 },
+        { src: "photos/RAKTIM1.JPG", caption: "", ratio: "3/4", rot: -2 },
+        { src: "photos/RAKTIM2.JPG", caption: "", ratio: "1/1", rot: 1 },
+        { src: "photos/rhythm1.jpg", caption: "", ratio: "4/5", rot: -1.5 },
+        { src: "photos/rhythm2.jpg", caption: "", ratio: "3/4", rot: 2 },
+        { src: "photos/riti1.jpg", caption: "", ratio: "1/1", rot: -1 },
+        { src: "photos/riti2.jpg", caption: "", ratio: "4/5", rot: 3 },
+        { src: "photos/sahil1.jpg", caption: "", ratio: "3/4", rot: -2 },
+        { src: "photos/sahil2.jpg", caption: "", ratio: "1/1", rot: 1.5 },
+        { src: "photos/sania.1.jpg", caption: "", ratio: "4/5", rot: -0.5 },
+        { src: "photos/sania.2.jpg", caption: "", ratio: "3/4", rot: 2.5 },
+        { src: "photos/tulika1.jpg", caption: "", ratio: "1/1", rot: -2 },
+        { src: "photos/tulika2.jpg", caption: "", ratio: "4/5", rot: 1 },
+        { src: "photos/Vaishnav.1.jpg", caption: "", ratio: "3/4", rot: -1.5 },
+        { src: "photos/vaishnav.2.jpg", caption: "", ratio: "1/1", rot: 2 },
+        { src: "photos/vedang1.jpg", caption: "", ratio: "4/5", rot: -1 },
+        { src: "photos/vedang2.jpg", caption: "", ratio: "3/4", rot: 2.5 },
+        { src: "photos/Ranjali1.jpg", caption: "", ratio: "4/5", rot: -1.5 },
+        { src: "photos/Ranjali2.jpg", caption: "", ratio: "3/4", rot: 2 },
+    ],
+    galleryPhotos: [
+        { src: "photos/funnyphoto1.jpg", caption: "", ratio: "4/5", rot: -3 },
+        { src: "photos/funnyphoto2.jpg", caption: "", ratio: "3/4", rot: 2 },
+        { src: "photos/funnyphoto3.jpg", caption: "", ratio: "1/1", rot: -1.5 },
+        { src: "photos/funnyphoto4.jpg", caption: "", ratio: "4/5", rot: 3 },
+        { src: "photos/FUNNYPHOTO5.JPG", caption: "", ratio: "3/4", rot: -2 },
+        { src: "photos/funnyphoto6.jpg", caption: "", ratio: "1/1", rot: 1.5 },
+        { src: "photos/funnyphoto7.jpg", caption: "", ratio: "4/5", rot: -2.5 },
+        { src: "photos/funnyphoto8.jpg", caption: "", ratio: "3/4", rot: 2.5 },
+        { src: "photos/funnyphoto9.jpg", caption: "", ratio: "1/1", rot: -1 },
+    ],
+    confessions: [
+        { text: "He has been a constant best-friend presence in his mom's life since day one.", by: "Mom" },
+        { text: "He makes his family proud through kindness, strength, and grounded values.", by: "Dad" },
+        { text: "He is known for patiently listening, caring deeply, and making people feel understood.", by: "Ishwari" },
+        { text: "He sets an unusually high standard for what loyal friendship looks like.", by: "Sahil" },
+        { text: "He brings a chaotic, joyful energy that makes ordinary moments fun.", by: "Sujal" },
+        { text: "He remains a dependable brotherly figure even through playful fights.", by: "Behen" },
+        { text: "He shows up for his people with practical support and steady maturity.", by: "Riti" },
+        { text: "He carries a bright energy that naturally lifts the mood around him.", by: "Rhythm" },
+        { text: "He has stayed supportive and reliable through changing phases of friendship.", by: "Vedang" },
+        { text: "He is the kind of brotherly friend with whom anything can be shared.", by: "Radhika" },
+        { text: "He listens without judgment and helps others feel lighter during hard moments.", by: "Pari" },
+        { text: "He holds a deeply important place in the lives of the people close to him.", by: "Lesha" },
+        { text: "He balances talent, effort, and consistency in a way people genuinely admire.", by: "Aarya" },
+        { text: "He makes every space feel lighter, warmer, and more playful.", by: "Akshita" },
+        { text: "His care, presence, and quiet consistency mean more than words can explain.", by: "Tulika" },
+        { text: "He creates a bond where people can be fully themselves without fear of judgment.", by: "Janhvi di" },
+        { text: "He stays creative, helpful, and unmistakably authentic to who he is.", by: "Raktim" },
+        { text: "He is remembered as one of the most genuine and valuable friends to have.", by: "Aryan" },
+        { text: "He has remained a true ride-or-die constant across years of life changes.", by: "Harshita" },
+        { text: "His small acts of care and emotional attentiveness make people feel seen.", by: "Sania" },
+        { text: "He turns everyday school and college memories into moments people never forget.", by: "aditya" },
+    ],
+    finaleTitle: "You Mean The World To Us",
+    finaleMessage: "You're not just our friend — you're family.\nEvery moment with you is a memory we'll treasure forever.\nHere's to many more years of laughter, love,\nand late-night conversations.\n\nHappy birthday, legend. We love you.",
+};
+
+const LETTERS_UNLOCK_TARGET = 10;
+
+function scrambleWord(word) {
+    const chars = String(word || '').split('');
+    for (let i = chars.length - 1; i > 0; i--) {
+        const j = (i * 7 + 3) % (i + 1);
+        const tmp = chars[i];
+        chars[i] = chars[j];
+        chars[j] = tmp;
+    }
+    return chars.join('');
+}
+
+const LETTER_CHALLENGE_TEMPLATES = [
+    { type: 'riddle', question: 'I have cities but no houses, forests but no trees, and water but no fish. What am I?', answer: 'map', hint: 'Think of something you can fold.' },
+    { type: 'riddle', question: 'The more you take, the more you leave behind. What am I?', answer: 'footsteps', hint: 'You make these while walking.' },
+    { type: 'riddle', question: 'I speak without a mouth and hear without ears. What am I?', answer: 'echo', hint: 'You hear me in hills and tunnels.' },
+    { type: 'riddle', question: 'What has to be broken before you can use it?', answer: 'egg', hint: 'Breakfast clue.' },
+    { type: 'riddle', question: 'What can travel around the world while staying in one corner?', answer: 'stamp', hint: 'It sits on an envelope.' },
+    { type: 'riddle', question: 'What has keys but cannot open locks?', answer: 'piano', hint: 'It makes music.' },
+    { type: 'riddle', question: 'What goes up but never comes down?', answer: 'age', hint: 'Birthday clue.' },
+    { type: 'riddle', question: 'What has one head, one foot, and four legs?', answer: 'bed', hint: 'In your room.' },
+    { type: 'riddle', question: 'What gets wetter the more it dries?', answer: 'towel', hint: 'You use it after a bath.' },
+    { type: 'riddle', question: 'What has a face and two hands but no arms or legs?', answer: 'clock', hint: 'It tells time.' },
+    { type: 'riddle', question: 'What is full of holes but still holds water?', answer: 'sponge', hint: 'Kitchen item.' },
+    { type: 'riddle', question: 'What has hands but cannot clap?', answer: 'clock', hint: 'It hangs on a wall.' },
+    { type: 'riddle', question: 'The more of this there is, the less you can see. What is it?', answer: 'darkness', hint: 'Night brings it.' },
+    { type: 'riddle', question: 'What has many keys but can not open a single lock?', answer: 'keyboard', hint: 'You use it to type.' },
+    { type: 'riddle', question: 'What has a neck but no head?', answer: 'bottle', hint: 'You drink from it.' },
+    { type: 'riddle', question: 'What has one eye but cannot see?', answer: 'needle', hint: 'Used for stitching.' },
+    { type: 'riddle', question: 'What can you catch but not throw?', answer: 'cold', hint: 'Usually in winter.' },
+    { type: 'riddle', question: 'What month has 28 days?', answer: 'all', hint: 'Not just February.' },
+    { type: 'riddle', question: 'What kind of room has no doors or windows?', answer: 'mushroom', hint: 'It is edible.' },
+    { type: 'riddle', question: 'What has many teeth but cannot bite?', answer: 'comb', hint: 'Used for hair.' },
+    { type: 'riddle', question: 'What can run but never walks?', answer: 'water', hint: 'Think of a river.' },
+    { type: 'riddle', question: 'What has words but never speaks?', answer: 'book', hint: 'You read it.' },
+    { type: 'riddle', question: 'What has a thumb and four fingers but is not alive?', answer: 'glove', hint: 'Worn on a hand.' },
+    { type: 'riddle', question: 'What can you break without touching it?', answer: 'promise', hint: 'It is about trust.' },
+    { type: 'riddle', question: 'What has to be answered but never asks a question?', answer: 'phone', hint: 'It rings.' },
+    { type: 'riddle', question: 'What has legs but does not walk?', answer: 'table', hint: 'Furniture.' },
+    { type: 'riddle', question: 'What can fill a room but takes up no space?', answer: 'light', hint: 'Switch it on.' },
+    { type: 'riddle', question: 'What has an eye but cannot see?', answer: 'hurricane', hint: 'A storm center.' },
+    { type: 'riddle', question: 'What begins with T, ends with T, and has T in it?', answer: 'teapot', hint: 'Found in a kitchen.' },
+    { type: 'riddle', question: 'What belongs to you but other people use it more than you do?', answer: 'name', hint: 'People call you by it.' },
+];
+
+function buildLetterChallenge(letter, index) {
+    const from = String(letter?.from || `friend${index + 1}`);
+    const template = LETTER_CHALLENGE_TEMPLATES[index];
+
+    if (!template) {
+        return {
+            type: 'riddle',
+            question: `Bonus riddle for ${from}: What has words but never speaks?`,
+            answer: 'book',
+            hint: 'You read it.',
+        };
+    }
+
+    return { ...template };
+}
+
+const LETTER_CHALLENGE_BOOK = CONFIG.letters.map((letter, index) => buildLetterChallenge(letter, index));
+
+function getLetterChallenge(index) {
+    return LETTER_CHALLENGE_BOOK[index % LETTER_CHALLENGE_BOOK.length];
+}
+
+function normalizeAnswer(value) {
+    return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// =============================
+//  CUSTOM CURSOR
+// =============================
+function CustomCursor() {
+    const dotRef = useRef(null);
+    const ringRef = useRef(null);
+    const pos = useRef({ x: 0, y: 0 });
+    const ringPos = useRef({ x: 0, y: 0 });
+    const [hovering, setHovering] = useState(false);
+
+    useEffect(() => {
+        const move = (e) => {
+            pos.current = { x: e.clientX, y: e.clientY };
+            if (dotRef.current) {
+                dotRef.current.style.left = e.clientX - 4 + 'px';
+                dotRef.current.style.top = e.clientY - 4 + 'px';
+            }
+        };
+        const tick = () => {
+            ringPos.current.x += (pos.current.x - ringPos.current.x) * 0.15;
+            ringPos.current.y += (pos.current.y - ringPos.current.y) * 0.15;
+            if (ringRef.current) {
+                ringRef.current.style.left = ringPos.current.x + 'px';
+                ringRef.current.style.top = ringPos.current.y + 'px';
+            }
+            requestAnimationFrame(tick);
+        };
+        const over = (e) => {
+            if (e.target.closest('button, a, .letter-card, .gallery-polaroid, .confession-note, .hero-cta')) setHovering(true);
+        };
+        const out = () => setHovering(false);
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseover', over);
+        document.addEventListener('mouseout', out);
+        requestAnimationFrame(tick);
+        return () => {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseover', over);
+            document.removeEventListener('mouseout', out);
+        };
+    }, []);
+
+    return (
+        <>
+            <div ref={dotRef} className="cursor-dot" />
+            <div ref={ringRef} className={`cursor-ring ${hovering ? 'hovering' : ''}`} />
+        </>
+    );
+}
+
+// =============================
+//  STARFIELD
+// =============================
+function Starfield() {
+    const stars = Array.from({ length: 80 }, (_, i) => ({
+        left: Math.random() * 100 + '%',
+        top: Math.random() * 100 + '%',
+        size: Math.random() * 2.5 + 0.5,
+        dur: (3 + Math.random() * 4) + 's',
+        minO: 0.1 + Math.random() * 0.2,
+        maxO: 0.5 + Math.random() * 0.5,
+        delay: Math.random() * 5 + 's',
+    }));
+    const shootingStars = Array.from({ length: 3 }, (_, i) => ({
+        top: (10 + Math.random() * 40) + '%',
+        left: (30 + Math.random() * 50) + '%',
+        delay: (i * 4 + Math.random() * 3) + 's',
+        dx: -(200 + Math.random() * 200) + 'px',
+        dy: (200 + Math.random() * 200) + 'px',
+    }));
+    return (
+        <div className="starfield">
+            {stars.map((s, i) => (
+                <div key={i} className="star star-twinkle" style={{
+                    left: s.left, top: s.top,
+                    width: s.size + 'px', height: s.size + 'px',
+                    '--dur': s.dur, '--min-o': s.minO, '--max-o': s.maxO,
+                    animationDelay: s.delay,
+                }} />
+            ))}
+            {shootingStars.map((s, i) => (
+                <div key={'shoot'+i} className="shooting-star" style={{
+                    top: s.top, left: s.left,
+                    animationDelay: s.delay,
+                    animationDuration: '2s',
+                    '--dx': s.dx, '--dy': s.dy,
+                }} />
+            ))}
+        </div>
+    );
+}
+
+// =============================
+//  CURSOR TRAIL
+// =============================
+function AnimatedBg() {
+    // Gradient orbs — large soft colored blobs
+    const orbs = [
+        { w: 350, h: 350, bg: 'radial-gradient(circle, rgba(240,160,184,0.35), transparent)', top: '10%', left: '5%', dur: '18s', mx: '80px', my: '-60px' },
+        { w: 300, h: 300, bg: 'radial-gradient(circle, rgba(192,122,224,0.25), transparent)', top: '60%', left: '75%', dur: '22s', mx: '-70px', my: '50px' },
+        { w: 250, h: 250, bg: 'radial-gradient(circle, rgba(160,200,240,0.3), transparent)', top: '30%', left: '55%', dur: '25s', mx: '40px', my: '70px' },
+        { w: 280, h: 280, bg: 'radial-gradient(circle, rgba(240,200,120,0.2), transparent)', top: '70%', left: '15%', dur: '20s', mx: '-60px', my: '-40px' },
+        { w: 200, h: 200, bg: 'radial-gradient(circle, rgba(160,224,168,0.2), transparent)', top: '5%', left: '80%', dur: '24s', mx: '50px', my: '80px' },
+    ];
+    // Floating shapes
+    const shapeTypes = ['\u2665', '\u2726', '\u25CF', '\u2736', '\u2605', '\u2764', '\u273F'];
+    const shapeColors = ['#3B82F6', '#5B9FFF', '#A8D5FF', '#2563EB', '#60A5FA', '#93C5FD', '#BFDBFE'];
+    const shapes = Array.from({ length: 25 }, (_, i) => ({
+        char: shapeTypes[i % shapeTypes.length],
+        color: shapeColors[i % shapeColors.length],
+        left: (i * 4.1 % 96) + '%',
+        size: 10 + (i * 7 % 18) + 'px',
+        dur: 12 + (i * 3 % 12) + 's',
+        delay: (i * 1.7 % 14) + 's',
+        o: 0.15 + (i * 0.02 % 0.2),
+        s: 0.7 + (i * 0.1 % 0.6),
+        rot: (i % 2 === 0 ? 1 : -1) * 360 + 'deg',
+    }));
+    // Sparkle dots
+    const sparkles = Array.from({ length: 40 }, (_, i) => ({
+        left: (Math.random() * 100) + '%',
+        top: (Math.random() * 100) + '%',
+        size: 2 + (i * 3 % 5) + 'px',
+        color: shapeColors[i % shapeColors.length],
+        dur: 2 + (i * 0.7 % 4) + 's',
+        delay: (i * 0.5 % 8) + 's',
+    }));
+    // Bubbles
+    const bubbles = Array.from({ length: 12 }, (_, i) => ({
+        left: (5 + i * 8.2 % 90) + '%',
+        bottom: '-50px',
+        size: 15 + (i * 11 % 35) + 'px',
+        dur: 10 + (i * 4 % 10) + 's',
+        delay: (i * 2.3 % 12) + 's',
+    }));
+    return (
+        <div className="animated-bg">
+            {/* Gradient orbs */}
+            {orbs.map((o, i) => (
+                <div key={'orb'+i} className="bg-orb" style={{
+                    width: o.w, height: o.h,
+                    background: o.bg,
+                    top: o.top, left: o.left,
+                    '--dur': o.dur, '--mx': o.mx, '--my': o.my,
+                }} />
+            ))}
+            {/* Shimmer wave */}
+            <div className="bg-shimmer" />
+            {/* Floating shapes */}
+            {shapes.map((s, i) => (
+                <div key={'shape'+i} className="bg-shape" style={{
+                    left: s.left,
+                    fontSize: s.size,
+                    color: s.color,
+                    '--dur': s.dur, '--delay': s.delay,
+                    '--o': s.o, '--s': s.s, '--rot': s.rot,
+                }}>{s.char}</div>
+            ))}
+            {/* Sparkles */}
+            {sparkles.map((sp, i) => (
+                <div key={'sp'+i} className="bg-sparkle" style={{
+                    left: sp.left, top: sp.top,
+                    '--size': sp.size, '--color': sp.color,
+                    '--dur': sp.dur, '--delay': sp.delay,
+                }} />
+            ))}
+            {/* Bubbles */}
+            {bubbles.map((b, i) => (
+                <div key={'bub'+i} className="bg-bubble" style={{
+                    left: b.left, bottom: b.bottom,
+                    width: b.size, height: b.size,
+                    '--dur': b.dur, '--delay': b.delay,
+                }} />
+            ))}
+        </div>
+    );
+}
+
+function CursorTrail() {
+    const containerRef = useRef(null);
+    useEffect(() => {
+        const colors = ['#3B82F6', '#5B9FFF', '#60A5FA', '#A8D5FF'];
+        let count = 0;
+        const handler = (e) => {
+            count++;
+            if (count % 3 !== 0) return;
+            const el = document.createElement('div');
+            el.className = 'trail-particle';
+            el.style.left = e.clientX + 'px';
+            el.style.top = e.clientY + 'px';
+            el.style.background = colors[Math.floor(Math.random() * colors.length)];
+            containerRef.current?.appendChild(el);
+            setTimeout(() => el.remove(), 600);
+        };
+        document.addEventListener('mousemove', handler);
+        return () => document.removeEventListener('mousemove', handler);
+    }, []);
+    return <div ref={containerRef} style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 99990 }} />;
+}
+
+// =============================
+//  CONFETTI BURST
+// =============================
+function useConfetti() {
+    const fire = useCallback((x, y) => {
+        const colors = ['#3B82F6', '#5B9FFF', '#60A5FA', '#A8D5FF', '#fff'];
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+        for (let i = 0; i < 25; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 80 + Math.random() * 180;
+            piece.style.cssText = `
+                left: ${x}px; top: ${y}px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+                width: ${4 + Math.random() * 6}px;
+                height: ${4 + Math.random() * 6}px;
+                --dx: ${Math.cos(angle) * dist}px;
+                --dy: ${Math.sin(angle) * dist - 100}px;
+                --rot: ${Math.random() * 1080}deg;
+                --dur: ${0.8 + Math.random() * 1}s;
+            `;
+            container.appendChild(piece);
+        }
+        setTimeout(() => container.remove(), 2500);
+    }, []);
+    return fire;
+}
+
+// =============================
+//  NAV
+// =============================
+function Nav({ page, onNav }) {
+    const items = [
+        { id: 'hero', label: 'Home' },
+        { id: 'letters', label: 'Letters' },
+        { id: 'gallery', label: 'Gallery' },
+        { id: 'wishes', label: '21 Reasons' },
+        { id: 'finale', label: 'Finale' },
+    ];
+    return (
+        <nav className="nav">
+            {items.map(it => (
+                <button
+                    key={it.id}
+                    className={`nav-btn ${page === it.id ? 'active' : ''}`}
+                    onClick={() => onNav(it.id)}
+                >{it.label}</button>
+            ))}
+        </nav>
+    );
+}
+
+// =============================
+//  HERO
+// =============================
+function Hero({ onNav, onBalloonPop, lettersUnlocked, balloonsPopped }) {
+    const title = `Happy Birthday, ${CONFIG.name}`;
+    const chars = title.split('').map((ch, i) => (
+        <span key={i} className="char" style={{ animationDelay: `${0.5 + i * 0.035}s` }}>
+            {ch === ' ' ? '\u00A0' : ch}
+        </span>
+    ));
+
+    // Balloons
+    const balloonColors = ['#e07aa0','#d4a0e8','#f5b8d4','#80c8f0','#f0c878','#a0e0a8','#f0a090','#90d0d0'];
+    const createBalloon = (id, version = 0) => ({
+        id,
+        version,
+        color: balloonColors[Math.floor(Math.random() * balloonColors.length)],
+        left: (4 + Math.random() * 92) + '%',
+        size: (35 + Math.random() * 24).toFixed(0) + 'px',
+        dur: (10 + Math.random() * 8).toFixed(2) + 's',
+        delay: (Math.random() * 2).toFixed(2) + 's',
+        sway: ((Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 30)).toFixed(0) + 'px',
+        popping: false,
+    });
+
+    const [balloons, setBalloons] = useState(() => Array.from({ length: 14 }, (_, i) => createBalloon(i)));
+    const [popBursts, setPopBursts] = useState([]);
+    const [popConfetti, setPopConfetti] = useState([]);
+
+    const popBalloon = (id, e) => {
+        e.stopPropagation();
+        const targetBalloon = balloons.find(b => b.id === id);
+        if (!targetBalloon || targetBalloon.popping) return;
+
+        onBalloonPop();
+
+        const burstId = `${id}-${Date.now()}`;
+        const confettiColors = ['#ffffff', targetBalloon.color, '#BBE1FF', '#ffd166', '#90d0d0'];
+        const shards = Array.from({ length: 18 }, (_, i) => {
+            const angle = (Math.PI * 2 * i) / 18 + (Math.random() * 0.5 - 0.25);
+            const distance = 35 + Math.random() * 70;
+            return {
+                id: `${burstId}-${i}`,
+                burstId,
+                x: e.clientX,
+                y: e.clientY,
+                dx: Math.cos(angle) * distance,
+                dy: Math.sin(angle) * distance - (10 + Math.random() * 20),
+                rot: (Math.random() * 540 - 270).toFixed(0) + 'deg',
+                size: (4 + Math.random() * 7).toFixed(1) + 'px',
+                br: i % 4 === 0 ? '50%' : '2px',
+                dur: (0.65 + Math.random() * 0.45).toFixed(2) + 's',
+                color: confettiColors[i % confettiColors.length],
+            };
+        });
+
+        setBalloons(prev => prev.map(b => (b.id === id ? { ...b, popping: true } : b)));
+        setPopBursts(prev => [...prev, { id: burstId, x: e.clientX, y: e.clientY, color: targetBalloon.color }]);
+        setPopConfetti(prev => [...prev, ...shards]);
+
+        setTimeout(() => {
+            setPopBursts(prev => prev.filter(p => p.id !== burstId));
+            setBalloons(prev => prev.map(b => (b.id === id ? createBalloon(id, b.version + 1) : b)));
+        }, 420);
+        setTimeout(() => {
+            setPopConfetti(prev => prev.filter(p => p.burstId !== burstId));
+        }, 1200);
+    };
+
+    // Confetti burst pieces
+    const confettiColors = ['#e07aa0','#d4a0e8','#f5b8d4','#f0c878','#a0e0a8','#80c8f0','#fff'];
+    const confettiPieces = Array.from({ length: 50 }, (_, i) => {
+        const angle = (Math.PI * 2 * i) / 50 + (i * 0.3);
+        const dist = 150 + (i * 37 % 250);
+        return {
+            color: confettiColors[i % confettiColors.length],
+            dx: Math.cos(angle) * dist,
+            dy: Math.sin(angle) * dist - 200,
+            rot: (i * 137 % 1080),
+            dur: 2 + (i * 17 % 15) / 10,
+            delay: 1.8 + (i * 7 % 20) / 40,
+            w: 5 + (i * 3 % 7),
+            h: 5 + (i * 5 % 8),
+            br: i % 3 === 0 ? '50%' : '2px',
+            left: 50 + (Math.cos(angle) * 5),
+            top: 40,
+        };
+    });
+
+    // Friends ticker — duplicate for seamless scroll
+    const friends = CONFIG.friends || [];
+    const tickerItems = [...friends, ...friends];
+    const popsRemaining = Math.max(0, LETTERS_UNLOCK_TARGET - balloonsPopped);
+    const unlockProgress = Math.min(100, (balloonsPopped / LETTERS_UNLOCK_TARGET) * 100);
+
+    return (
+        <div className="page hero page-transition-enter">
+            <div className="hero-glow" />
+            {/* Floating balloons */}
+            <div className="balloons-container">
+                {balloons.map((b, i) => (
+                    <div key={`${b.id}-${b.version}`} className={`balloon ${b.popping ? 'popping' : ''}`} style={{
+                        left: b.left,
+                        background: `radial-gradient(circle at 35% 30%, ${b.color}dd, ${b.color}88)`,
+                        '--size': b.size,
+                        '--dur': b.dur,
+                        '--delay': b.delay,
+                        '--sway': b.sway,
+                    }} onClick={(e) => popBalloon(b.id, e)} />
+                ))}
+            </div>
+            {popBursts.map(pop => (
+                <div
+                    key={pop.id}
+                    className="balloon-pop"
+                    style={{ left: `${pop.x}px`, top: `${pop.y}px`, '--pop-color': pop.color }}
+                />
+            ))}
+            {popConfetti.map(piece => (
+                <div
+                    key={piece.id}
+                    className="balloon-pop-confetti"
+                    style={{
+                        left: `${piece.x}px`,
+                        top: `${piece.y}px`,
+                        '--dx': `${piece.dx}px`,
+                        '--dy': `${piece.dy}px`,
+                        '--rot': piece.rot,
+                        '--size': piece.size,
+                        '--br': piece.br,
+                        '--dur': piece.dur,
+                        '--color': piece.color,
+                    }}
+                />
+            ))}
+            {/* Confetti burst */}
+            {confettiPieces.map((c, i) => (
+                <div key={'hc'+i} className="hero-confetti-piece" style={{
+                    left: c.left + '%',
+                    top: c.top + '%',
+                    background: c.color,
+                    '--dx': c.dx + 'px',
+                    '--dy': c.dy + 'px',
+                    '--rot': c.rot + 'deg',
+                    '--dur': c.dur + 's',
+                    '--delay': c.delay + 's',
+                    '--w': c.w + 'px',
+                    '--h': c.h + 'px',
+                    '--br': c.br,
+                }} />
+            ))}
+            {/* SVG Birthday Cake */}
+            <div className="cake-container">
+                <div className="cake-glow" />
+                <svg viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        {/* Gradients */}
+                        <linearGradient id="layer1" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#f9a8c4" />
+                            <stop offset="100%" stopColor="#e8789a" />
+                        </linearGradient>
+                        <linearGradient id="layer2" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#f7d794" />
+                            <stop offset="100%" stopColor="#e8b860" />
+                        </linearGradient>
+                        <linearGradient id="layer3" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#5B9FFF" />
+                            <stop offset="100%" stopColor="#3B82F6" />
+                        </linearGradient>
+                        <linearGradient id="frosting1" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#BBE1FF" />
+                            <stop offset="100%" stopColor="#A8D5FF" />
+                        </linearGradient>
+                        <linearGradient id="frosting2" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#fff8e1" />
+                            <stop offset="100%" stopColor="#ffe082" />
+                        </linearGradient>
+                        <linearGradient id="frosting3" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#D0E8FF" />
+                            <stop offset="100%" stopColor="#BBE1FF" />
+                        </linearGradient>
+                        <radialGradient id="flameOuter" cx="50%" cy="80%" r="50%">
+                            <stop offset="0%" stopColor="#fff176" />
+                            <stop offset="40%" stopColor="#ffb74d" />
+                            <stop offset="100%" stopColor="#ff7043" stopOpacity="0" />
+                        </radialGradient>
+                        <radialGradient id="flameInner" cx="50%" cy="70%" r="35%">
+                            <stop offset="0%" stopColor="#ffffff" />
+                            <stop offset="50%" stopColor="#fff9c4" />
+                            <stop offset="100%" stopColor="#ffcc02" stopOpacity="0" />
+                        </radialGradient>
+                        <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+                            <stop offset="100%" stopColor="rgba(255,255,255,0.08)" />
+                        </linearGradient>
+                        <linearGradient id="candleGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#fff5cc" />
+                            <stop offset="50%" stopColor="#ff80ab" />
+                            <stop offset="100%" stopColor="#f06292" />
+                        </linearGradient>
+                        <linearGradient id="candleGrad2" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#e1f5fe" />
+                            <stop offset="50%" stopColor="#80deea" />
+                            <stop offset="100%" stopColor="#4dd0e1" />
+                        </linearGradient>
+                        <linearGradient id="candleGrad3" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#EFF6FF" />
+                            <stop offset="50%" stopColor="#BBE1FF" />
+                            <stop offset="100%" stopColor="#7B9FFF" />
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                        </filter>
+                    </defs>
+
+                    {/* Plate / stand */}
+                    <ellipse cx="100" cy="202" rx="88" ry="10" fill="url(#plate)" />
+                    <ellipse cx="100" cy="198" rx="82" ry="5" fill="rgba(255,255,255,0.08)" />
+
+                    {/* BOTTOM LAYER (purple) */}
+                    <rect x="30" y="158" width="140" height="42" rx="8" fill="url(#layer3)" />
+                    {/* Bottom frosting band */}
+                    <rect x="30" y="158" width="140" height="10" rx="5" fill="url(#frosting3)" />
+                    {/* Bottom frosting drips */}
+                    <ellipse cx="50" cy="168" rx="6" ry="10" fill="#D0E8FF" />
+                    <ellipse cx="75" cy="168" rx="5" ry="14" fill="#D0E8FF" />
+                    <ellipse cx="105" cy="168" rx="7" ry="11" fill="#D0E8FF" />
+                    <ellipse cx="130" cy="168" rx="5" ry="13" fill="#D0E8FF" />
+                    <ellipse cx="155" cy="168" rx="6" ry="9" fill="#D0E8FF" />
+                    {/* Sprinkles on bottom layer */}
+                    <rect x="45" y="176" width="5" height="2" rx="1" fill="#f48fb1" transform="rotate(-20 47 177)" />
+                    <rect x="62" y="180" width="5" height="2" rx="1" fill="#80cbc4" transform="rotate(15 64 181)" />
+                    <rect x="85" y="175" width="5" height="2" rx="1" fill="#fff176" transform="rotate(-10 87 176)" />
+                    <rect x="110" y="182" width="5" height="2" rx="1" fill="#81d4fa" transform="rotate(25 112 183)" />
+                    <rect x="135" y="178" width="5" height="2" rx="1" fill="#f48fb1" transform="rotate(-15 137 179)" />
+                    <rect x="150" y="174" width="5" height="2" rx="1" fill="#a5d6a7" transform="rotate(10 152 175)" />
+
+                    {/* MIDDLE LAYER (golden) */}
+                    <rect x="45" y="118" width="110" height="42" rx="6" fill="url(#layer2)" />
+                    {/* Middle frosting band */}
+                    <rect x="45" y="118" width="110" height="9" rx="4" fill="url(#frosting2)" />
+                    {/* Middle frosting drips */}
+                    <ellipse cx="60" cy="127" rx="5" ry="12" fill="#fff8e1" />
+                    <ellipse cx="82" cy="127" rx="6" ry="9" fill="#fff8e1" />
+                    <ellipse cx="110" cy="127" rx="5" ry="13" fill="#fff8e1" />
+                    <ellipse cx="138" cy="127" rx="6" ry="10" fill="#fff8e1" />
+                    {/* Sprinkles on middle layer */}
+                    <rect x="58" y="135" width="4" height="2" rx="1" fill="#ef9a9a" transform="rotate(20 60 136)" />
+                    <rect x="78" y="140" width="4" height="2" rx="1" fill="#80deea" transform="rotate(-10 80 141)" />
+                    <rect x="98" y="133" width="4" height="2" rx="1" fill="#c5e1a5" transform="rotate(15 100 134)" />
+                    <rect x="120" y="138" width="4" height="2" rx="1" fill="#ffcc80" transform="rotate(-25 122 139)" />
+                    <rect x="140" y="134" width="4" height="2" rx="1" fill="#b39ddb" transform="rotate(5 142 135)" />
+
+                    {/* TOP LAYER (pink) */}
+                    <rect x="58" y="80" width="84" height="40" rx="6" fill="url(#layer1)" />
+                    {/* Top frosting band */}
+                    <rect x="58" y="80" width="84" height="9" rx="4" fill="url(#frosting1)" />
+                    {/* Top frosting drips */}
+                    <ellipse cx="72" cy="89" rx="5" ry="11" fill="#BBE1FF" />
+                    <ellipse cx="92" cy="89" rx="4" ry="8" fill="#BBE1FF" />
+                    <ellipse cx="112" cy="89" rx="5" ry="12" fill="#BBE1FF" />
+                    <ellipse cx="130" cy="89" rx="4" ry="9" fill="#BBE1FF" />
+                    {/* Sprinkles on top layer */}
+                    <rect x="70" y="96" width="4" height="2" rx="1" fill="#80cbc4" transform="rotate(-15 72 97)" />
+                    <rect x="88" y="100" width="4" height="2" rx="1" fill="#ffab91" transform="rotate(20 90 101)" />
+                    <rect x="108" y="95" width="4" height="2" rx="1" fill="#b39ddb" transform="rotate(-10 110 96)" />
+                    <rect x="125" y="100" width="4" height="2" rx="1" fill="#fff176" transform="rotate(15 127 101)" />
+
+                    {/* CANDLES */}
+                    {/* Left candle */}
+                    <rect x="75" y="48" width="5" height="33" rx="2" fill="url(#candleGrad)" />
+                    <line x1="77.5" y1="50" x2="77.5" y2="78" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                    {/* Center candle */}
+                    <rect x="97" y="42" width="6" height="38" rx="2" fill="url(#candleGrad2)" />
+                    <line x1="100" y1="44" x2="100" y2="77" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                    {/* Right candle */}
+                    <rect x="120" y="48" width="5" height="33" rx="2" fill="url(#candleGrad3)" />
+                    <line x1="122.5" y1="50" x2="122.5" y2="78" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+
+                    {/* FLAMES — animated */}
+                    <g filter="url(#glow)">
+                        {/* Left flame */}
+                        <ellipse cx="77.5" cy="40" rx="5" ry="10" fill="url(#flameOuter)">
+                            <animate attributeName="ry" values="10;8;10" dur="0.4s" repeatCount="indefinite" />
+                            <animate attributeName="rx" values="5;4;5" dur="0.35s" repeatCount="indefinite" />
+                        </ellipse>
+                        <ellipse cx="77.5" cy="41" rx="2.5" ry="5" fill="url(#flameInner)">
+                            <animate attributeName="ry" values="5;4;5" dur="0.3s" repeatCount="indefinite" />
+                        </ellipse>
+                        {/* Center flame (bigger) */}
+                        <ellipse cx="100" cy="33" rx="6" ry="12" fill="url(#flameOuter)">
+                            <animate attributeName="ry" values="12;10;12" dur="0.45s" repeatCount="indefinite" />
+                            <animate attributeName="rx" values="6;5;6" dur="0.38s" repeatCount="indefinite" />
+                        </ellipse>
+                        <ellipse cx="100" cy="34" rx="3" ry="6" fill="url(#flameInner)">
+                            <animate attributeName="ry" values="6;5;6" dur="0.32s" repeatCount="indefinite" />
+                        </ellipse>
+                        {/* Right flame */}
+                        <ellipse cx="122.5" cy="40" rx="5" ry="10" fill="url(#flameOuter)">
+                            <animate attributeName="ry" values="10;9;10" dur="0.42s" repeatCount="indefinite" />
+                            <animate attributeName="rx" values="5;4.5;5" dur="0.36s" repeatCount="indefinite" />
+                        </ellipse>
+                        <ellipse cx="122.5" cy="41" rx="2.5" ry="5" fill="url(#flameInner)">
+                            <animate attributeName="ry" values="5;4;5" dur="0.28s" repeatCount="indefinite" />
+                        </ellipse>
+                    </g>
+
+                    {/* Cherry on top — rendered after candles so it appears in front */}
+                    <circle cx="100" cy="71" r="7" fill="#e53935" />
+                    <ellipse cx="97" cy="68" rx="2.5" ry="2" fill="rgba(255,255,255,0.4)" />
+                    <path d="M100 64 Q103 55 108 52" stroke="#4caf50" strokeWidth="2" fill="none" strokeLinecap="round" />
+                    <ellipse cx="109" cy="51" rx="4" ry="2.5" fill="#66bb6a" transform="rotate(-20 109 51)" />
+
+                    {/* Tiny stars sparkle around flames */}
+                    <circle cx="70" cy="30" r="1.5" fill="#fff9c4" opacity="0.8">
+                        <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.5s" repeatCount="indefinite" />
+                    </circle>
+                    <circle cx="130" cy="32" r="1" fill="#fff9c4" opacity="0.6">
+                        <animate attributeName="opacity" values="0.6;0.1;0.6" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    <circle cx="100" cy="18" r="1.2" fill="#ffe082" opacity="0.7">
+                        <animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.8s" repeatCount="indefinite" />
+                    </circle>
+                </svg>
+            </div>
+            <div className="hero-main">
+                <div className="hero-overline">a gift from all of us</div>
+                <h1 className="hero-title">{chars}</h1>
+                <p className="hero-message">{CONFIG.heroMessage}</p>
+                <button className="hero-cta" onClick={() => onNav('letters')}>
+                    {lettersUnlocked ? 'Open your envelopes' : `Pop ${popsRemaining} balloons to unlock letters`}
+                </button>
+                <div className="unlock-status">
+                    {lettersUnlocked ? (
+                        <div className="unlock-ready">letters unlocked: let the fun begin</div>
+                    ) : (
+                        <>
+                            <div className="unlock-text">balloon quest: {balloonsPopped}/{LETTERS_UNLOCK_TARGET}</div>
+                            <div className="unlock-bar">
+                                <div className="unlock-fill" style={{ '--unlock-progress': `${unlockProgress}%` }} />
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+            {/* Scrolling friend names */}
+            <div className="ticker-container">
+                <div className="ticker-label">with love from</div>
+                <div className="ticker-track" style={{ '--ticker-dur': `${friends.length * 1.5}s` }}>
+                    {tickerItems.map((name, i) => (
+                        <React.Fragment key={i}>
+                            <span className="ticker-name">{name}</span>
+                            <span className="ticker-dot">{"\u2665"}</span>
+                        </React.Fragment>
+                    ))}
+                </div>
+            </div>
+            <div className="hero-line" />
+        </div>
+    );
+}
+
+// =============================
+//  ENVELOPE LETTER CARD
+// =============================
+function LetterCard({ index, letter, opened, onClick }) {
+    return (
+        <div className="letter-card-wrapper" style={{ animationDelay: `${0.1 + (index % 5) * 0.08 + Math.floor(index / 5) * 0.06}s` }}>
+            <div className={`letter-card ${opened ? 'opened' : ''}`} onClick={(e) => onClick(e)}>
+                <div className="envelope-container">
+                    <div className="envelope-letter-peek" />
+                    <div className="envelope-flap">
+                        <div className="envelope-flap-face" />
+                        <div className="envelope-flap-back" />
+                    </div>
+                    <div className="envelope-seal">{'\u2665'}</div>
+                    <div className="envelope-body">
+                        <div className="card-from">{letter.from}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// =============================
+//  LETTERS PAGE
+// =============================
+function LettersPage({ opened, onOpen, solvedCount, rewardToast }) {
+    return (
+        <div className="page letters-section page-transition-enter">
+            <RewardBadge solved={solvedCount} total={CONFIG.letters.length} />
+            {rewardToast ? <div className="reward-toast">{rewardToast}</div> : null}
+            <div className="letters-header">
+                <h2 className="letters-header-title">{CONFIG.letters.length} Letters, Just For You</h2>
+                <p className="letters-header-sub">Each envelope holds a little piece of someone's heart. Tap one to unfold their words.</p>
+                <div className="letters-header-deco">
+                    <span className="deco-line" />
+                    <span className="deco-diamond" />
+                    <span className="deco-line" />
+                </div>
+            </div>
+            <div className="letters-grid">
+                {CONFIG.letters.map((l, i) => (
+                    <LetterCard key={i} index={i} letter={l} opened={opened.has(i)} onClick={(e) => onOpen(i, e)} />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// =============================
+//  READING PAGE — SPIRAL NOTEBOOK + POLAROIDS
+// =============================
+const SPIRAL_COUNT = 16;
+
+// Polaroid layout patterns — cycles through different positions per letter
+const POLAROID_LAYOUTS = [
+    'top-right-bottom-left',    // 1st photo floats right near top, 2nd floats left near bottom
+    'top-left-bottom-right',    // reversed
+    'both-right',               // both stacked on the right side
+    'split-middle',             // one left, one right midway through text
+    'pair-bottom',              // both side-by-side at the end
+    'top-left-pair-bottom',     // one floats top-left, pair at bottom
+    'scattered-right',          // both on right side at different heights
+    'top-right-inline-bottom',  // one floats top-right, one centered at bottom
+];
+
+function getLetterPhotoBaseName(name) {
+    return String(name || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '');
+}
+
+function LetterPolaroid({ photo, rot, tapeRot, className, style }) {
+    return (
+        <div className={`polaroid ${className || ''}`} style={{
+            '--rot': `${rot}deg`,
+            '--tape-rot': `${tapeRot}deg`,
+            ...style
+        }}>
+            <div className="polaroid-img">
+                {photo.src ? (
+                    <img src={photo.src} alt={photo.caption} />
+                ) : (
+                    <span className="placeholder">add photo</span>
+                )}
+            </div>
+            <div className="polaroid-caption">{photo.caption}</div>
+        </div>
+    );
+}
+
+function ReadingPage({ index, onBack, tearing }) {
+    const letter = CONFIG.letters[index];
+    const photoBaseName = getLetterPhotoBaseName(letter.from);
+    const photos = letter.photos || [
+        { src: `photos/${photoBaseName}.1.jpg`, caption: '' },
+        { src: `photos/${photoBaseName}.2.jpg`, caption: '' }
+    ];
+    const spirals = Array.from({ length: SPIRAL_COUNT }, (_, i) => i);
+    const layout = POLAROID_LAYOUTS[index % POLAROID_LAYOUTS.length];
+
+    // Split message roughly in half for inserting polaroids in the middle
+    const lines = letter.message.split('\n');
+    const mid = Math.floor(lines.length / 2);
+    const topPart = lines.slice(0, mid).join('\n');
+    const bottomPart = lines.slice(mid).join('\n');
+
+    // Rotation values seeded by index for variety
+    const r1 = ((index * 7 + 3) % 9) - 4;     // -4 to 4
+    const r2 = ((index * 5 + 11) % 9) - 4;
+    const t1 = ((index * 3 + 1) % 5) - 2;
+    const t2 = ((index * 4 + 7) % 5) - 2;
+
+    const renderContent = () => {
+        switch (layout) {
+            case 'top-right-bottom-left':
+                return (
+                    <div className="letter-content-wrapper">
+                        <LetterPolaroid photo={photos[0]} rot={r1} tapeRot={t1} className="polaroid-float float-right" />
+                        <div className="paper-body">{topPart}</div>
+                        <LetterPolaroid photo={photos[1] || photos[0]} rot={r2} tapeRot={t2} className="polaroid-float float-left" />
+                        <div className="paper-body">{bottomPart}</div>
+                        <div className="clear-float" />
+                    </div>
+                );
+            case 'top-left-bottom-right':
+                return (
+                    <div className="letter-content-wrapper">
+                        <LetterPolaroid photo={photos[0]} rot={r1} tapeRot={t1} className="polaroid-float float-left" />
+                        <div className="paper-body">{topPart}</div>
+                        <LetterPolaroid photo={photos[1] || photos[0]} rot={r2} tapeRot={t2} className="polaroid-float float-right" />
+                        <div className="paper-body">{bottomPart}</div>
+                        <div className="clear-float" />
+                    </div>
+                );
+            case 'both-right':
+                return (
+                    <div className="letter-content-wrapper">
+                        <LetterPolaroid photo={photos[0]} rot={r1} tapeRot={t1} className="polaroid-float float-right float-delayed-start" />
+                        <div className="paper-body">{topPart}</div>
+                        <LetterPolaroid photo={photos[1] || photos[0]} rot={r2} tapeRot={t2} className="polaroid-float float-right" />
+                        <div className="paper-body">{bottomPart}</div>
+                        <div className="clear-float" />
+                    </div>
+                );
+            case 'split-middle':
+                return (
+                    <div className="letter-content-wrapper">
+                        <div className="paper-body">{topPart}</div>
+                        <div className="polaroid-pair">
+                            <LetterPolaroid photo={photos[0]} rot={r1} tapeRot={t1} />
+                            <LetterPolaroid photo={photos[1] || photos[0]} rot={r2} tapeRot={t2} />
+                        </div>
+                        <div className="paper-body">{bottomPart}</div>
+                    </div>
+                );
+            case 'pair-bottom':
+                return (
+                    <div className="letter-content-wrapper">
+                        <div className="paper-body">{letter.message}</div>
+                        <div className="polaroid-pair">
+                            <LetterPolaroid photo={photos[0]} rot={r1} tapeRot={t1} />
+                            <LetterPolaroid photo={photos[1] || photos[0]} rot={r2} tapeRot={t2} />
+                        </div>
+                    </div>
+                );
+            case 'top-left-pair-bottom':
+                return (
+                    <div className="letter-content-wrapper">
+                        <LetterPolaroid photo={photos[0]} rot={r1} tapeRot={t1} className="polaroid-float float-left" />
+                        <div className="paper-body">{letter.message}</div>
+                        <div className="clear-float" />
+                        <div className="polaroid-pair">
+                            <LetterPolaroid photo={photos[1] || photos[0]} rot={r2} tapeRot={t2} />
+                        </div>
+                    </div>
+                );
+            case 'scattered-right':
+                return (
+                    <div className="letter-content-wrapper">
+                        <LetterPolaroid photo={photos[0]} rot={r1} tapeRot={t1} className="polaroid-float float-right" style={{ marginTop: '0px' }} />
+                        <div className="paper-body">{topPart}</div>
+                        <div className="clear-float" />
+                        <LetterPolaroid photo={photos[1] || photos[0]} rot={r2} tapeRot={t2} className="polaroid-float float-right" style={{ marginTop: '10px' }} />
+                        <div className="paper-body">{bottomPart}</div>
+                        <div className="clear-float" />
+                    </div>
+                );
+            case 'top-right-inline-bottom':
+                return (
+                    <div className="letter-content-wrapper">
+                        <LetterPolaroid photo={photos[0]} rot={r1} tapeRot={t1} className="polaroid-float float-right" />
+                        <div className="paper-body">{letter.message}</div>
+                        <div className="clear-float" />
+                        <div style={{ textAlign: 'center', margin: '15px 0' }}>
+                            <LetterPolaroid photo={photos[1] || photos[0]} rot={r2} tapeRot={t2} className="polaroid-inline" />
+                        </div>
+                    </div>
+                );
+            default:
+                return (
+                    <div className="letter-content-wrapper">
+                        <div className="paper-body">{letter.message}</div>
+                        <div className="polaroid-pair">
+                            <LetterPolaroid photo={photos[0]} rot={r1} tapeRot={t1} />
+                            <LetterPolaroid photo={photos[1] || photos[0]} rot={r2} tapeRot={t2} />
+                        </div>
+                    </div>
+                );
+        }
+    };
+
+    return (
+        <div className="page reading-page page-transition-enter">
+            <div className={`notebook-wrapper ${tearing ? 'tearing' : ''}`}>
+                <div className="spiral-rings">
+                    {spirals.map(i => <div key={i} className="spiral-ring" />)}
+                </div>
+                <div className="notebook-paper">
+                    <div className="paper-to">Dear {CONFIG.name},</div>
+                    {renderContent()}
+                    <div className="paper-signature">with love, {letter.from}</div>
+                </div>
+            </div>
+            <button className="back-btn" onClick={onBack}>Back to letters</button>
+        </div>
+    );
+}
+
+// =============================
+//  GALLERY PAGE — POLAROID THEME
+// =============================
+function GalleryPage() {
+    const rotations = CONFIG.galleryPhotos.map((p) => p.rot || (Math.random() * 6 - 3));
+    return (
+        <div className="page gallery-section page-transition-enter">
+            <div className="section-header">
+                <div className="section-label">the fun side</div>
+                <h2 className="section-title">Your Funniest Moments</h2>
+                <div className="section-line" />
+            </div>
+            <div className="gallery-masonry">
+                {CONFIG.galleryPhotos.map((p, i) => (
+                    <div className="gallery-item-wrapper" key={i} style={{
+                        animationDelay: `${0.1 + i * 0.1}s`,
+                        '--rot': `${rotations[i]}deg`
+                    }}>
+                        <div className="gallery-polaroid" style={{
+                            '--rot': `${rotations[i]}deg`,
+                            '--ratio': p.ratio
+                        }}>
+                            <div className="gallery-polaroid-img" style={{ '--ratio': p.ratio }}>
+                                {p.src ? (
+                                    <img src={p.src} alt={p.caption} loading="lazy" />
+                                ) : (
+                                    <span className="placeholder">add photo</span>
+                                )}
+                            </div>
+                            <div className="gallery-polaroid-caption">{p.caption}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// =============================
+//  CONFESSIONS WALL
+// =============================
+const NOTE_COLORS = ['note-pink', 'note-yellow', 'note-blue', 'note-green', 'note-lavender', 'note-peach'];
+const PIN_COLORS = ['pin-red', 'pin-blue', 'pin-green', 'pin-yellow', 'pin-white'];
+
+function ConfessionsPage() {
+    return (
+        <div className="page confessions-section page-transition-enter">
+            <div className="confessions-header">
+                <div className="confessions-header-icon">{"\ud83d\udc9b"}</div>
+                <h2 className="confessions-header-title">21 Reasons We Love You</h2>
+                <p className="confessions-header-sub">One heartfelt reason from each letter, pinned here forever.</p>
+            </div>
+            <div className="confessions-wall">
+                {CONFIG.confessions.map((c, i) => {
+                    const rot = ((i * 7 + 3) % 13) - 6;
+                    const noteColor = NOTE_COLORS[i % NOTE_COLORS.length];
+                    const pinColor = PIN_COLORS[i % PIN_COLORS.length];
+                    return (
+                        <div className="confession-wrapper" key={i} style={{
+                            animationDelay: `${0.1 + i * 0.08}s`,
+                            '--rot': `${rot}deg`
+                        }}>
+                            <div className={`confession-note ${noteColor}`} style={{ '--rot': `${rot}deg` }}>
+                                <div className={`confession-pin ${pinColor}`} />
+                                <div className="confession-text">"{c.text}"</div>
+                                <div className="confession-by">— {c.by}</div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+// =============================
+//  FINALE PAGE
+// =============================
+function FinalePage({ onImagesLoaded }) {
+    const [imagesLoading, setImagesLoading] = useState(true);
+    const [loadedCount, setLoadedCount] = useState(0);
+    
+    // Get all photos from CONFIG
+    const photos = CONFIG.photos || [];
+    const numColumns = 5;
+    
+    // Create columns with alternating scroll directions
+    const createColumns = () => {
+        const columns = Array.from({ length: numColumns }, (_, colIdx) => []);
+        
+        // Distribute photos across columns
+        photos.forEach((photo, idx) => {
+            columns[idx % numColumns].push(photo);
+        });
+        
+        // Duplicate photos for seamless looping
+        return columns.map((col, idx) => ({
+            photos: [...col, ...col, ...col],
+            direction: idx % 2 === 0 ? 'scroll-up' : 'scroll-down'
+        }));
+    };
+    
+    const columns = createColumns();
+    const totalImages = columns.reduce((sum, col) => sum + col.photos.length, 0);
+    
+    // Handle image load
+    const handleImageLoad = useCallback(() => {
+        setLoadedCount(prev => {
+            const newCount = prev + 1;
+            if (newCount === totalImages) {
+                setImagesLoading(false);
+                if (onImagesLoaded) {
+                    onImagesLoaded();
+                }
+            }
+            return newCount;
+        });
+    }, [totalImages, onImagesLoaded]);
+    
+    return (
+        <>
+            {imagesLoading && (
+                <div className="finale-loading-overlay">
+                    <div className="finale-loading-content">
+                        <div className="finale-loading-spinner" />
+                        <div className="finale-loading-text">Loading your moments...</div>
+                        <div className="finale-loading-progress">{loadedCount} / {totalImages}</div>
+                    </div>
+                </div>
+            )}
+            <div className="page finale page-transition-enter" style={{ opacity: imagesLoading ? 0 : 1, transition: 'opacity 0.5s ease' }}>
+                {/* Movie reel style photo carousel background */}
+                <div className="photo-carousel">
+                {columns.map((column, colIdx) => (
+                    <div key={`column-${colIdx}`} className="carousel-column">
+                        <div className={`carousel-column-track ${column.direction}`}>
+                            {column.photos.map((photo, photoIdx) => (
+                                <img 
+                                    key={`photo-${colIdx}-${photoIdx}`}
+                                    src={photo.src} 
+                                    alt={photo.caption || 'Carousel photo'}
+                                    className="carousel-photo"
+                                    onLoad={handleImageLoad}
+                                    onError={(e) => {
+                                        e.target.style.opacity = '0';
+                                        handleImageLoad(); // Count as loaded even if error
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            
+            {/* Content on top of carousel */}
+            <div className="ring-decor" style={{ width: 300, height: 300, top: '20%', left: '10%' }} />
+            <div className="ring-decor" style={{ width: 200, height: 200, bottom: '15%', right: '8%', animationDelay: '1s' }} />
+            <div className="ring-decor" style={{ width: 150, height: 150, top: '60%', left: '60%', animationDelay: '2s' }} />
+            <h2 className="finale-title">{CONFIG.finaleTitle}</h2>
+            <p className="finale-msg">{CONFIG.finaleMessage}</p>
+            <div className="finale-heart-container">
+                <div className="finale-heart" />
+            </div>
+            </div>
+        </>
+    );
+}
+
+function LetterChallengeModal({ open, challenge, answer, onAnswerChange, onSubmit, onSkip, error, letterFrom, tapCount, onTap }) {
+    if (!open || !challenge) return null;
+    const modeLabel = challenge.type === 'unscramble'
+        ? 'Unscramble'
+        : challenge.type === 'tap'
+            ? 'Tap challenge'
+            : challenge.type === 'math'
+                ? 'Math puzzle'
+                : challenge.type === 'reverse'
+                    ? 'Reverse code'
+                    : 'Riddle';
+
+    return (
+        <div className="challenge-overlay" onClick={onSkip}>
+            <div className="challenge-card" onClick={(e) => e.stopPropagation()}>
+                <div className="challenge-tag">letter challenge</div>
+                <div className="challenge-mode">{modeLabel}</div>
+                <div className="challenge-title">Solve to open {letterFrom}'s letter</div>
+                <div className="challenge-question">{challenge.question}</div>
+                <div className="challenge-hint">Hint: {challenge.hint}</div>
+
+                {challenge.type === 'tap' ? (
+                    <div className="tap-wrap">
+                        <div className="tap-count">taps: {tapCount} / {challenge.target}</div>
+                        <button className="tap-heart-btn" onClick={onTap}>{'♥'}</button>
+                    </div>
+                ) : (
+                    <>
+                        {challenge.type === 'unscramble' ? (
+                            <div className="challenge-activity">
+                                <div className="scramble-word">{challenge.scrambled}</div>
+                            </div>
+                        ) : null}
+                        <input
+                            className="challenge-input"
+                            value={answer}
+                            onChange={(e) => onAnswerChange(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') onSubmit(); }}
+                            placeholder="Type your answer..."
+                            autoFocus
+                        />
+                    </>
+                )}
+
+                {error ? <div className="challenge-error">{error}</div> : null}
+                <div className="challenge-actions">
+                    <button className="challenge-btn" onClick={onSkip}>back</button>
+                    <button className="challenge-btn primary" onClick={onSubmit}>unlock letter</button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function RewardBadge({ solved, total }) {
+    return (
+        <div className="reward-badge">
+            <div className="reward-badge-label">badges earned</div>
+            <div className="reward-badge-value">{solved}/{total}</div>
+        </div>
+    );
+}
+
+// =============================
+//  APP
+// =============================
+function App() {
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState('hero');
+    const [opened, setOpened] = useState(new Set());
+    const [readingIdx, setReadingIdx] = useState(null);
+    const [tearing, setTearing] = useState(false);
+    const [balloonsPopped, setBalloonsPopped] = useState(0);
+    const [lettersUnlocked, setLettersUnlocked] = useState(false);
+    const [challengeOpen, setChallengeOpen] = useState(false);
+    const [challengeInput, setChallengeInput] = useState('');
+    const [challengeError, setChallengeError] = useState('');
+    const [pendingLetter, setPendingLetter] = useState(null);
+    const [tapCount, setTapCount] = useState(0);
+    const [solvedChallenges, setSolvedChallenges] = useState(0);
+    const [rewardToast, setRewardToast] = useState('');
+    const [finaleImagesLoaded, setFinaleImagesLoaded] = useState(false);
+    const confetti = useConfetti();
+
+    useEffect(() => {
+        document.title = `Happy Birthday ${CONFIG.name}`;
+        setTimeout(() => setLoading(false), 2000);
+    }, []);
+
+    useEffect(() => {
+        if (balloonsPopped >= LETTERS_UNLOCK_TARGET && !lettersUnlocked) {
+            setLettersUnlocked(true);
+            confetti(window.innerWidth * 0.5, window.innerHeight * 0.4);
+        }
+    }, [balloonsPopped, lettersUnlocked, confetti]);
+
+    useEffect(() => {
+        if (!rewardToast) return;
+        const t = setTimeout(() => setRewardToast(''), 1700);
+        return () => clearTimeout(t);
+    }, [rewardToast]);
+
+    const handleBalloonPopCount = useCallback(() => {
+        setBalloonsPopped(prev => prev + 1);
+    }, []);
+
+    const navigate = useCallback((p) => {
+        if (p === 'letters' && !lettersUnlocked) return;
+        if (p === 'finale') {
+            setFinaleImagesLoaded(false); // Reset loading state when navigating to finale
+        }
+        setTearing(false);
+        setReadingIdx(null);
+        setPage(p);
+        window.scrollTo({ top: 0 });
+    }, [lettersUnlocked]);
+
+    const proceedToLetter = useCallback((letterIdx, sourcePos) => {
+        const wasOpened = opened.has(letterIdx);
+        setOpened(prev => { const n = new Set(prev); n.add(letterIdx); return n; });
+        setReadingIdx(letterIdx);
+        setPage('reading');
+        window.scrollTo({ top: 0 });
+        if (!wasOpened) {
+            const x = sourcePos?.x || window.innerWidth * 0.5;
+            const y = sourcePos?.y || window.innerHeight * 0.35;
+            confetti(x, y);
+        }
+    }, [opened, confetti]);
+
+    const openLetter = useCallback((i, e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const sourcePos = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+
+        if (opened.has(i)) {
+            proceedToLetter(i, sourcePos);
+            return;
+        }
+
+        setPendingLetter({ idx: i, sourcePos });
+        setChallengeInput('');
+        setChallengeError('');
+        setTapCount(0);
+        setChallengeOpen(true);
+    }, [opened, proceedToLetter]);
+
+    const closeChallenge = useCallback(() => {
+        setChallengeOpen(false);
+        setChallengeInput('');
+        setChallengeError('');
+        setTapCount(0);
+        setPendingLetter(null);
+    }, []);
+
+    const handleTapChallenge = useCallback(() => {
+        setTapCount(prev => prev + 1);
+    }, []);
+
+    const submitChallenge = useCallback(() => {
+        if (!pendingLetter) return;
+
+        const challenge = getLetterChallenge(pendingLetter.idx);
+        const solved = challenge.type === 'tap'
+            ? tapCount >= challenge.target
+            : normalizeAnswer(challengeInput) === normalizeAnswer(challenge.answer);
+
+        if (solved) {
+            const resolved = pendingLetter;
+            setSolvedChallenges(prev => prev + 1);
+            setRewardToast('+1 badge earned');
+            closeChallenge();
+            proceedToLetter(resolved.idx, resolved.sourcePos);
+            confetti(window.innerWidth - 80, 110);
+            return;
+        }
+
+        setChallengeError(
+            challenge.type === 'tap'
+                ? `Keep tapping. Need ${challenge.target - tapCount} more.`
+                : 'Not quite. Try again - you got this.'
+        );
+    }, [pendingLetter, challengeInput, tapCount, closeChallenge, proceedToLetter, confetti]);
+
+    const handleBack = useCallback(() => {
+        setTearing(true);
+        setTimeout(() => {
+            setTearing(false);
+            setReadingIdx(null);
+            setPage('letters');
+            window.scrollTo({ top: 0 });
+        }, 480);
+    }, []);
+
+    const renderPage = () => {
+        switch (page) {
+            case 'hero': return <Hero onNav={navigate} onBalloonPop={handleBalloonPopCount} lettersUnlocked={lettersUnlocked} balloonsPopped={balloonsPopped} />;
+            case 'letters': return <LettersPage opened={opened} onOpen={(i, e) => openLetter(i, e)} solvedCount={solvedChallenges} rewardToast={rewardToast} />;
+            case 'reading': return readingIdx !== null
+                ? <ReadingPage index={readingIdx} onBack={handleBack} tearing={tearing} />
+                : <LettersPage opened={opened} onOpen={(i, e) => openLetter(i, e)} solvedCount={solvedChallenges} rewardToast={rewardToast} />;
+            case 'gallery': return <GalleryPage />;
+            case 'wishes': return <ConfessionsPage />;
+            case 'finale': return <FinalePage onImagesLoaded={() => setFinaleImagesLoaded(true)} />;
+            default: return <Hero onNav={navigate} onBalloonPop={handleBalloonPopCount} lettersUnlocked={lettersUnlocked} balloonsPopped={balloonsPopped} />;
+        }
+    };
+
+    return (
+        <>
+            <div className={`loader ${loading ? '' : 'done'}`}>
+                <div className="loader-ring" />
+                <div className="loader-text">preparing something special...</div>
+            </div>
+            <Starfield />
+            <AnimatedBg />
+            <CustomCursor />
+            <CursorTrail />
+            {!loading && (
+                <>
+                    <Nav page={page} onNav={navigate} />
+                    {renderPage()}
+                    <LetterChallengeModal
+                        open={challengeOpen}
+                        challenge={pendingLetter ? getLetterChallenge(pendingLetter.idx) : null}
+                        letterFrom={pendingLetter ? CONFIG.letters[pendingLetter.idx]?.from : ''}
+                        answer={challengeInput}
+                        onAnswerChange={setChallengeInput}
+                        onSubmit={submitChallenge}
+                        onSkip={closeChallenge}
+                        error={challengeError}
+                        tapCount={tapCount}
+                        onTap={handleTapChallenge}
+                    />
+                </>
+            )}
+        </>
+    );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
+
+
